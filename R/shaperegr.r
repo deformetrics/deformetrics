@@ -1,4 +1,4 @@
-#' animdefo
+#' shaperegr
 #'
 #' This function performs the multivariate regression between an array of shapes (2D or 3D) and a dependent variable or a matrix of independent variables. It also plot shapes predicted  at low and high independent variable values. If the independent variable is univariate Canonical Correlation Analysis (with optional group-structure) is also displayed. Optionally, the heatmap on deformation between shapes predicted at low and high independent variable values is computed. The function saves also a sequence of shapes predicted at equally spaced values (20 by default) within the range of independent variable.
 #' @param shapearray array:	an array of shapes treated as dependent variable indep	a vector representing the independent variable or a matrix of independent variables. In this latter case the shapes are predicted at low and high values of each variable present in the matrix. 
@@ -59,8 +59,12 @@
 #' prov2<-shaperegr(shapearray,cbind(amy3d$size,rnorm(length(indep),0,1)),links=links,group=group,heatmap=T,triang=triang)
 #' }
 #' @export
-shaperegr<-function(shapearray,indep,mag=1,frames=20,links=NULL,zlim=NULL,colcca=NULL,pchcca=NULL,lwd=2,heatmap=F,triang=NULL,group=NULL,rampcolors=c("blue4","cyan2","yellow","red4"),alpha=0.7,from=NULL,to=NULL,plotsource3d=F){
+shaperegr<-function(shapearray,indep,mag=1,frames=20,links=NULL,zlim=NULL,colcca=NULL,legend=T,pchcca=NULL,lwd=2,heatmap=F,triang=NULL,group=NULL,rampcolors=c("blue4","cyan2","yellow","red4"),alpha=0.7,from=NULL,to=NULL){
   if(is.null(links)==T){links=c(1,1)}
+  require(Morpho)
+  require(shapes)
+  require(vegan)
+  
   nland<-dim(shapearray)[1]
   ndim<-dim(shapearray)[2]
   nind<-dim(shapearray)[3]
@@ -97,8 +101,8 @@ shaperegr<-function(shapearray,indep,mag=1,frames=20,links=NULL,zlim=NULL,colcca
       title(main="At high x-values")
       tpsgridpaolo(shapeminindep[,,1],shapemaxindep[,,1],opt=1,ngrid=20,,linksYY=links,displ=F,mag=mag,linksTT=links,collinksTT=2,collinksYY=1,xlim=range(themax[,1]),ylim=range(themax[,2]),ext=0)
       title(main="Black: at high x-values")
-      mycca(indep,array2mat(shapearray,nind,ndim*nland),legend=F,group=group,col=colcca,pch=pchcca,xlab=NULL,ylab=NULL)
-      title("CCA analysis")
+      if(ncol(as.matrix(indep))<2){mycca(indep,array2mat(shapearray,nind,ndim*nland),legend=legend,group=group,col=colcca,pch=pchcca,xlab=NULL,ylab=NULL,posl="bottomright")
+      title("CCA analysis")}
     }else{
       par(mfrow=c(2,2))
       plotmyarrays(shapeminindep[,,1],xlim=range(themax[,1]),ylim=range(themax[,2]),links=links,txt=F,pch=19)
@@ -115,8 +119,8 @@ shaperegr<-function(shapearray,indep,mag=1,frames=20,links=NULL,zlim=NULL,colcca
       par(new=T)
       plot(myhxpos$mate2,xlim=range(themax[,1]),ylim=range(themax[,2]),asp=1,pch=19,cex=0.5,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
       if(is.null(links)==F){lineplot(myhxpos$mate2,links,col=1,lwd=lwd)}
-      mycca(indep,array2mat(shapearray,nind,ndim*nland),legend=F,group=group,col=colcca,pch=pchcca,xlab=NULL,ylab=NULL)
-      title("CCA analysis")
+      if(ncol(as.matrix(indep))<2){mycca(indep,array2mat(shapearray,nind,ndim*nland),legend=legend,group=group,col=colcca,pch=pchcca,xlab=NULL,ylab=NULL,,posl="bottomright")
+      title("CCA analysis")}
     }
   }
   
@@ -139,7 +143,7 @@ shaperegr<-function(shapearray,indep,mag=1,frames=20,links=NULL,zlim=NULL,colcca
     text3d(0,0,0,"At high x-values")
     if(heatmap==T){
       if(is.null(triang)==T){stop("Please input triangulation")}
-      myhxpos<-diffonmesh(shapeminindep[,,1],shapemaxindep[,,1],t(triang),from=from,to=to,rampcolors=rampcolors,alphas=c(alpha,0.7),graph=F,plotsource=plotsource3d)
+      myhxpos<-diffonmesh(shapeminindep[,,1],shapemaxindep[,,1],t(triang),from=from,to=to,rampcolors=rampcolors,alphas=c(alpha,0.7),graph=F,plotsource=F)
       next3d()
       plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       shade3d(myhxpos$obm$colMesh,alpha=alpha)
@@ -147,20 +151,22 @@ shaperegr<-function(shapearray,indep,mag=1,frames=20,links=NULL,zlim=NULL,colcca
       next3d()
       text3d(0,0,0,"Heatmap")
     }
-    mycca(indep,array2mat(shapearray,nind,ndim*nland),legend=F,group=group,col=colcca,pch=pchcca,xlab=NULL,ylab=NULL)
-    title("CCA analysis")
+    
+    if(ncol(as.matrix(indep))<2){mycca(indep,array2mat(shapearray,nind,ndim*nland),legend=legend,group=group,col=colcca,pch=pchcca,xlab=NULL,ylab=NULL,posl="bottomright")
+    title("CCA analysis")}
   }
   
   
-  if(ncol(as.matrix(indep))<2){myseq<-seq(min(indep),max(indep),length.out=frames)}else{
-    if(is.null(myseq)==F){
+  if(ncol(as.matrix(indep))<2){myseq<-seq(min(indep),max(indep),length.out=frames)}
+    
+  if(ncol(as.matrix(indep))>1){
       myseq<-NULL
       for(k in 1:ncol(indep)){
         myseqi<-seq(min(indep[,k]),max(indep[,k]),length.out=frames)
         myseq<-cbind(myseq,myseqi)
       }
-    }else{myseq<-myseq}
-  }
+    }
+  
   
   if(ncol(as.matrix(indep))<2){
     seqshapes<-NULL

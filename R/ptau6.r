@@ -34,6 +34,9 @@
 #' @export
 
 ptau6<-function(array,factor,CSinit=T,sepure=F,polyn=1,CR=NULL,locs=NULL,perm=999){
+  library(Morpho)
+  library(shapes)
+  library(vegan)
   warning("WARNING: this function reorders data (if they are not) in increasing size order within each level")
   k<-dim(array)[1]
   m<-dim(array)[2]

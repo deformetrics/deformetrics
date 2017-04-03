@@ -36,6 +36,7 @@
 #' @examples
 #' \dontrun{ 
 #' data(pri3d)
+#' data(surf)
 #' data(linksbase)
 #' data(linksface)
 #' data(linksentire)
@@ -73,14 +74,16 @@
 #' }
 #' @export
 
-plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatmap=F,heatcolors=c("blue4","cyan2","yellow","red4"),triang1=NULL,triang2=NULL,alpha=1,S1=NA,S2=NA,from1=NULL,to1=NULL,from2=NULL,to2=NULL,rounds=0,sdx=1,sdy=1,labels=NULL,group=NULL,col=1,colgroup=NULL,zlim2d=NULL){
+plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatmap=F,heatcolors=c("blue4","cyan2","yellow","red4"),triang1=NULL,triang2=NULL,alpha=1,S1=NA,S2=NA,from1=NULL,to1=NULL,from2=NULL,to2=NULL,rounds=0,sdx=1,sdy=1,labels=NULL,group=NULL,col=1,pch=19,colgroup=NULL,zlim2d=NULL){
+
+  
   thepls<-pls2B(block1,block2,rounds=rounds)
   XScores<-thepls$Xscores
   YScores<-thepls$Yscores
-  plot(XScores[, plsn],YScores[,plsn],asp=1)
+  plot(XScores[, plsn],YScores[,plsn],asp=1,col=col,pch=pch)
   if(!is.null(labels)){textxy(XScores[, plsn],YScores[, plsn],labels)}
   
-  if(!is.null(group)){plot2dhull(cbind(XScores[, plsn],YScores[, plsn]),group,1,col=col,colhull=colgroup,labels=labels)}else{NULL}
+  if(!is.null(group)){plot2dhull(cbind(XScores[, plsn],YScores[, plsn]),group,1,pch=pch,col=col,colhull=colgroup,labels=labels)}else{NULL}
   
   if(!is.null(group)){
     xscoresmeans<-as.matrix(aggregate(XScores,by=list(group),mean)[,-1])
