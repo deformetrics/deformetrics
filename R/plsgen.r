@@ -36,7 +36,6 @@
 #' @examples
 #' \dontrun{ 
 #' data(pri3d)
-#' data(surf)
 #' data(linksbase)
 #' data(linksface)
 #' data(linksentire)
