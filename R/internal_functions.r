@@ -4,6 +4,33 @@
 #' @author Paolo Piras
 #' @export  
 
+opaloop<-function(GM,array,scale=F,reflect=F){
+library(abind)
+k<-dim(array)[1]
+  m<-dim(array)[2]
+  n<-dim(array)[3]
+  
+  looped<-NULL
+rots<-NULL
+for(i in 1:n){
+
+opai<-procOPA(GM,array[,,i],scale=scale,reflect=reflect)
+
+loopedi<-array(opai$Bhat,dim=c(k,m,1))
+looped<-abind::abind(looped,loopedi)  
+
+rotsi<-opai$R
+rots<-c(rots,list(rotsi))
+
+
+
+}
+out<-list(looped=looped,rots=rots)
+out
+}
+
+#' @export
+
 diffonmesh<-function(lmsource,lmtarget,triang,colsource=1,alphas=c(0.7,0.3),grid=F,aff=F,nonaff=F,distscale=1, from = NULL,to = NULL,tol=NULL,sign=F,title=T,displace = FALSE,plotsource=T, steps = 20,rampcolors = colorRamps::blue2green2red(steps - 1),graph=T){
   for ( i in c("Morpho","Rvcg","rgl")) {
     if (!require(i,character.only = TRUE))
