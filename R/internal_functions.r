@@ -4,6 +4,97 @@
 #' @author Paolo Piras
 #' @export  
 
+diffonmesh<-function(lmsource,lmtarget,triang,colsource=1,alphas=c(0.7,0.3),grid=F,aff=F,nonaff=F,distscale=1, from = NULL,to = NULL,tol=NULL,sign=F,title=T,displace = FALSE,plotsource=T, steps = 20,rampcolors = colorRamps::blue2green2red(steps - 1),graph=T){
+  for ( i in c("Morpho","Rvcg","rgl")) {
+    if (!require(i,character.only = TRUE))
+      stop(paste0("please install package ",i))
+  }
+  lmsource <- rotonto(lmtarget,lmsource)$yrot
+  thetarget <- t(cbind(lmtarget,1))
+  thesource <- t(cbind(lmsource,1))
+  getPlotNr <- length(which(c(aff,nonaff,grid) == TRUE))+1
+  layout(matrix(1:getPlotNr,1,getPlotNr,byrow = T))
+  triangolazioni <- triang
+  thetarget_mesh <- list(vb=thetarget,it=triangolazioni)
+  class(thetarget_mesh) <- "mesh3d"
+  class(thetarget_mesh) <- "mesh3d"
+  thesource_mesh<-list(vb=thesource,it=triangolazioni)
+  class(thesource_mesh) <- "mesh3d"
+  class(thesource_mesh) <- "mesh3d"
+  if(grid==T){
+    shade3d(thetarget_mesh)
+    
+    ###between pointclouds
+    distvec <- sqrt(rowSums((lmsource-lmtarget)^2))/distscale
+    if(graph==T){
+    them<-meshDist(lmtarget,distvec = distvec,from=from,to=to,tol=tol,sign=sign,steps = 20,rampcolors =rampcolors)
+    }else{
+      them<-meshDist(lmtarget,distvec = distvec,from=from,to=to,tol=tol,sign=sign,steps = 20,rampcolors =rampcolors,shade=F)
+      
+    }
+      
+    ##if you want add a deformed cube
+    if(graph==T){
+    deformGrid3d(lmsource,lmtarget,type="p",size=10,ngrid = 5,add=T)
+    title("Distance between point-clouds")}
+  }
+  
+  ### between surfaces
+  thetarget_warped <- tps3d(thesource_mesh,lmsource,lmtarget,lambda = 1e-8)
+  distvec2 <- sqrt(rowSums((vert2points(thesource_mesh)-vert2points(thetarget_warped))^2))/distscale
+  if(graph==T){
+  if(plotsource==T){shade3d(thesource_mesh,col=colsource,alpha=alphas[2])}
+  them<-meshDist(thetarget_mesh,thesource_mesh,distvec=distvec2,alpha=alphas[1],add=T,from=from,to=to,tol=tol,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors)
+  if(title==T){title3d("total")
+    title("total")}
+  }else{
+    them<-meshDist(thetarget_mesh,distvec=distvec2,alpha=alphas[1],add=T,from=from,to=to,tol=tol,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors,shade=F)
+}
+  
+  
+  
+  if (nonaff || aff) {
+    affinetrafo <- computeTransform(vert2points(thetarget_mesh),vert2points(thesource_mesh),type="a")
+    affineshort <- applyTransform(thesource_mesh,affinetrafo)
+    
+    if(nonaff) {### visualize non-affine deform between surfaces 
+      ##create affine transfrom to longnose.mesh to remove affine differences and calculate distance from affine transform to target
+      
+      distvec3 <- sqrt(rowSums((vert2points(affineshort)-vert2points(thetarget_warped))^2))/distscale
+      if(graph==T){
+      open3d()
+      shade3d(thetarget_mesh,col=1,alpha=alphas[2])
+      themna<-meshDist(thesource_mesh,distvec=distvec3,add=T,from=from,to=to,tol=tol,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors)
+      if(title==T){title3d("non affine")
+        title("non-affine")}
+      }else{
+        themna<-meshDist(thesource_mesh,distvec=distvec3,add=T,from=from,to=to,tol=tol,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors,shade=F)
+        }
+      
+      
+    }
+    
+    if(aff) {###  the affine transform looks like that:
+      distaffnonaffon4<-sqrt(rowSums((vert2points(affineshort)-vert2points(thesource_mesh))^2))/distscale
+      if(graph==T){
+      open3d()
+      shade3d(thetarget_mesh,col=1,alpha=alphas[2])
+      thema<-meshDist(thesource_mesh,distvec=distaffnonaffon4,add=T,from=from,to=to,tol=tol,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors)
+      if(title==T){title3d("affine")
+        title("affine")}
+      }else{
+        thema<-meshDist(thesource_mesh,distvec=distaffnonaffon4,add=T,from=from,to=to,tol=tol,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors,shade=F)
+      }
+      
+      
+    }
+  }else{themna<-NULL
+  thema<-NULL
+  }
+  out<-list(obm=them,themna=themna,thema=thema)
+}
+
+#' @export
 mycca<-function(x,y,pch=19,col=1,group=NULL,labels=NULL,extl=F,legend=T,xl=NULL,yl=NULL,posl=c("topright"),cex=1,xlab=NULL,ylab=NULL,asp=NULL){
   require(CCA)
   require(vegan)
