@@ -6,7 +6,7 @@
 #' @param CR=NULL: if NULLL CR is estimated as the consensus of the array via Generalized Procrustes Analysis (GPA). Otherwise the specified CR is used.
 #' @param pole=CR; by default the Riemannian pole coincides with CR. 
 #' @param diffpole=F logical: if TRUE the pole is not coincident with CR. This is not supposed to be used by common users. 
-#' @param locs=NULL: if NULL the local references ar estimated via separate per-group GPAs. Oterwise the specifiesed locs are used-
+#' @param locs=NULL: if NULL the local references ar estimated via separate per-group GPAs. Oterwise the specifiesed locs are used.
 #' @param center=T logical: if TRUE shapes are centered. 
 #' @param CSinit=F logical: if TRUE caling at unit size is performed. 
 #' @param tolrot=1 numeric: tolerance for rotation during GPA. 
@@ -21,7 +21,7 @@
 #' group<-factor(rep(1:5,each=21))
 #' plottraj(procSym(case1,CSinit=T)$PCscores[,1:2],group,asp=1)######## a classic approach does not recover the cycle
 #' dtcase1<-newdt(case1,group,CR=procSym(case1[,,firstsfac(group)],CSinit=F,reflect=F,scale=F,pcAlign=F)$mshape,locs=case1[,,firstsfac(group)],tolrot=10)
-#' }  
+#' plottraj(procSym(dtcase1,CSinit=T)$PCscores[,1:2],group,asp=1)######## transported data recover the cycle
 #' @export  
 newdt<-function(array,group,CR=NULL,pole=CR,diffpole=F,locs=NULL,center=T,CSinit=F,tolrot=1,tol=1e-8,doopa=T,domopa=T){
   if(center==T){array<-centershapes(array)}

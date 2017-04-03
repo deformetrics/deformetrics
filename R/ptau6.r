@@ -4,9 +4,11 @@
 #' @param array numeric: an array kxmxn of landmark coordinates
 #' @param factor character: variable factor that affiliates shapes to group levels 
 #' @param CSinit logical: if TRUE shapes are scaled at unit size (default=TRUE)
-#' @param sepur logical: if TRUE separate per-group multivariate regression between shape and size are performed on shapes aligned after separate GPAs  (default=FALSE)
+#' @param sepure logical: if TRUE separate per-group multivariate regression between shape and size are performed on shapes aligned after separate GPAs  (default=FALSE)
 #' @param polyn numeric: default=1 the degree of regression
+#' @param perm numeric: number of permutations for group non parametric regression
 #' @author Paolo Piras
+#' @references  Piras P., Teresi L., Traversetti L., Varano V, Gabriele S., Kotsakis T., Raia P., Puddu P.E., Scalici M. (2016). The conceptual framework of ontogenetic trajectories: Parallel Transport allows the recognition and visualization of pure deformation patterns. Evolution and Development 18: 182-200. doi: 10.1111/ede.12186
 #' @examples
 #' \dontrun{ 
 #' library(Morpho)
@@ -29,13 +31,9 @@
 #' plotptau5(objptau,linksdors,pch=as.numeric(objptau$factorord),col=rep(1,length(objptau$factorord)),round(max(centroid.size(objptau$arrayord)),digits=0)/2,shiftnegy=2,mag=2,subplotdim=1)
 #' ## End(Not run)
 #' }
-#'
 #' @export
 
-ptau6<-function(array,factor,CSinit=T,sepure=F,polyn=1){
-  library(Morpho)
-  library(shapes)
-  library(vegan)
+ptau6<-function(array,factor,CSinit=T,sepure=F,polyn=1,CR=NULL,locs=NULL,perm=999){
   warning("WARNING: this function reorders data (if they are not) in increasing size order within each level")
   k<-dim(array)[1]
   m<-dim(array)[2]
@@ -52,9 +50,9 @@ ptau6<-function(array,factor,CSinit=T,sepure=F,polyn=1){
   if(sepure==T){depepure<-array2mat(sepgpa(newarray,factor,CSinit=CSinit,scale=F)$mountedorpdata,n,k*m)}
   indepepure<-centroid.size(newarray)
   print("Individual multivariate (linear) regression between shape and size" )
-  print(manymultgr(depepure,indepepure,factor))
+  print(manymultgr(depepure,indepepure,factor,steps=perm))
   print("Pairwise *linear* mancova p-values on original data") 
-  print(pwpermancova(depepure,indepepure,factor)$p_adonis_pred1_pred2)
+  print(pwpermancova(depepure,indepepure,factor,nperm=perm)$p_adonis_pred1_pred2)
   thedatapure<-data.frame(indepure=indepepure,depure=depepure)
   thelmlistpure<-NULL
   mypredictpure<-NULL
@@ -71,22 +69,26 @@ ptau6<-function(array,factor,CSinit=T,sepure=F,polyn=1){
   mypredictpure<-read.inn(mypredictpure,k,m)
   myresidpure<-read.inn(myresidpure,k,m)
   
-  prls<-lshift2(mypredictpure,factor,CSinit=CSinit,CR=procSym(mypredictpure[,,firstsfac(factor)],scale=F,pcAlign=F,reflect=F,CSinit=F)$mshape,locs=mypredictpure[,,firstsfac(factor)])
+
+if(is.null(CR)==T){CR<-procSym(mypredictpure[,,firstsfac(factor)],scale=F,pcAlign=F,reflect=F,CSinit=F)$mshape}else{CR<-CR}
+if(is.null(locs)==T){locs<-mypredictpure[,,firstsfac(factor)]}else{locs<-locs}
+
+  prls<-lshift2(mypredictpure,factor,CSinit=CSinit,CR=CR,locs=locs)
   
   common<-array2mat(procSym(newarray,pcAlign=,scale=F,CSinit=CSinit)$orpdata,n,k*m)
   print("Pairwise multivariate (linear) regression between shape and size" )
-  print(pwpermancova(common,indepepure,factor)$p_adonis_pred1_pred2)
+  print(pwpermancova(common,indepepure,factor,nperm=perm)$p_adonis_pred1_pred2)
   space1<-prcomp(array2mat(prls$transported,n,k*m))
   space1mshape<-procSym(prls$transported,pcAlign=F)$mshape
   origtrasp<-prls$transported+myresidpure
   
   origproj<-predict(space1,array2mat(origtrasp,n,k*m))
   print("Pairwise multivariate (linear) regression between shape of transported data and size" )
-  print(pwpermancova(array2mat(origtrasp,n,k*m),indepepure,factor)$p_adonis_pred1_pred2)
+  print(pwpermancova(array2mat(origtrasp,n,k*m),indepepure,factor,nperm=perm)$p_adonis_pred1_pred2)
   depepure2<-origtrasp
   
   print("Individual multivariate (linear) regression between shape of transported data and size" )
-  print(manymultgr(array2mat(depepure2,n,k*m),indepepure,factor))
+  print(manymultgr(array2mat(depepure2,n,k*m),indepepure,factor,steps=perm))
   
   thedatapure2<-data.frame(indepure2=indepepure,depure2=array2mat(depepure2,n,k*m))
   thelmlistpure2<-NULL
@@ -102,5 +104,5 @@ ptau6<-function(array,factor,CSinit=T,sepure=F,polyn=1){
   }
   
   
-  out<-list(arrayord=newarray,factorord=factor,depepure=depepure,indepepure=indepepure,thelmlistpure=thelmlistpure,predictpure=mypredictpure,residpure=myresidpure,shifted=array2mat(prls$transported,n,k*m),thelmlistpure2=thelmlistpure2,predictpure2=array2mat(prls$transported,n,k*m),predictpure3=mypredictpure2,residpure2=myresidpure2,space1=space1,origtrasp=array2mat(origtrasp,n,k*m),origproj=origproj,space1mshape=space1mshape)                                   
+  out<-list(k=k,m=m,n=n,arrayord=newarray,factorord=factor,CR=CR,locs=locs,depepure=depepure,indepepure=indepepure,thelmlistpure=thelmlistpure,predictpure=mypredictpure,residpure=myresidpure,shifted=array2mat(prls$transported,n,k*m),thelmlistpure2=thelmlistpure2,predictpure2=array2mat(prls$transported,n,k*m),predictpure3=mypredictpure2,residpure2=myresidpure2,space1=space1,origtrasp=array2mat(origtrasp,n,k*m),origproj=origproj,space1mshape=space1mshape)                                   
 }

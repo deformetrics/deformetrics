@@ -4,6 +4,77 @@
 #' @author Paolo Piras
 #' @export  
 
+areasip<-function(matrix,links=NULL,PB=NA,PA=NA,S=NA,SB=NA,H=NA,V=3,a=NULL,q=NULL,Y=FALSE,j=FALSE,D=FALSE,St=Inf,Q=TRUE,graph=T,extpol=F){
+  if(!is.null(links)){warning("Links **must** identify, among other structures, a closed contour")}
+  library(geometry)
+  library(tripack)
+  library(geoR)
+  library(gstat)
+  library(sp)
+  library(fields)
+  library(RTriangle)
+  mate<-matrix
+  if(!is.null(links)&is.na(S)==T){S<-list2matrix(links)}
+  
+  if(extpol==T){
+  step1<-pslg(mate,S=S,PB=PA,PA=PA,SB=SB,H=NA)
+  posimpnoh<-RTriangle::triangulate(step1,V=V,a=NULL,S=St,q=q,Y=Y,j=j,D=D,Q=Q)
+  step2<-matrix[unique(posimpnoh$E[ posimpnoh$EB%in%c(1)]),]
+  maulinks<-posimpnoh$E[posimpnoh$EB%in%c(1),]
+  newmaulinks<-maulinks
+  newmaulinks[,1]<-c(1:nrow(maulinks))
+  newmaulinks[,2]<-match(maulinks[,2],maulinks[,1])
+  cycles2 <- function(links) {
+    require(ggm)
+    if (any(is.na(links))) stop("missing value/s in links")
+    mat <- matrix(0L, max(links), max(links))
+    mat[links] <- 1
+    lapply(ggm::fundCycles(mat), function(xa) rev(xa[ , 1L]))
+  }
+  
+  mypol<-step2[cycles2(newmaulinks)[[1]],]}else{mypol<-c("you do not want external polygon")}
+  
+  
+  p<-pslg(mate,PB=PB,PA=PA,S=S,SB=SB,H=H)
+  au<-RTriangle::triangulate(p,V=1,a=a,q=q,Y=Y,j=j,D=D,S=St,Q=Q)
+  if(graph==T){
+    plot(au,asp=1)
+    lineplot(mate,links,col=3)
+    points(au$P,pch=19)
+    points(mate,pch=21,cex=2)
+  }
+  centros<-NULL
+  areas<-NULL
+  for(i in 1:nrow(au$T)){
+    centrosi<-apply(au$P[au$T[i,],],2,mean)
+    centros<-rbind(centros,centrosi)
+    areasi<-convhulln(au$P[au$T[i,],],option="FA")$vol
+    areas<-c(areas,areasi)
+  }
+  if(graph==T){points(centros,col=2)}
+  M<-centros
+  
+  
+  
+  thecentr<-centroids(mate)
+  dasomm<-NULL
+  for(i in 1:nrow(M)){
+    dasommi<-dist(rbind(thecentr,M[i,]))^2*areas[i]
+    dasomm<-c(dasomm,dasommi)
+  }
+  ip<-sum(dasomm)
+  are<-sum(areas)
+  
+  deltri<-au$T
+  ptri<-au$P
+  origcentros<-rbind(mate,M)
+  
+  out<-list(area=are,areas=areas,ip=ip,centros=centros,deltri=deltri,ptri=ptri,origcentros=origcentros,triangob=au,ext=mypol)
+  out
+}
+#' @export
+
+
 array2list<-function(array){
   
 
@@ -78,6 +149,191 @@ return(firstsres)
 }
 #' @export
 
+heat2d<-function(init,fin,invc=F,constr=T,sen=F,logsen=T,nadd=5000,linkss=NULL,zlim=NULL,legend=T,plottarget=T,ext=0.1,collinkss=1,lwds=2,collinkst=2,lwdt=2,pchs=19,pcht=19,cexs=0.5,cext=0.5,colors=c("blue4","cyan2","yellow","red4"),alpha=1,ngrid=30,oma=c(5,5,5,5),mai=c(3,3,3,3),mar=c(3,3,3,3),mag=1,tol=0.1,graphics=T,PB=NA,PA=NA,S=NA,SB=NA,H=NA,V=3,a=NULL,q=NULL,Y=FALSE,j=FALSE,D=FALSE,St=Inf,Q=TRUE,pholes=NA){
+  library(shapes)
+  library(Morpho)
+  library(matrixcalc)
+  library(geometry)
+  library(tripack)
+  library(geoR)
+  library(gstat)
+  library(sp)
+  library(fields)
+  library(RTriangle)
+  library(sp)
+  library(alphahull)
+  library(ggm)
+  if(!is.na(H)&is.na(pholes)==T){stop("If you specify 'H' you need to specify 'pholes' also")}
+  if(!is.na(pholes)&is.null(linkss)==T){stop("If you specify 'H' and 'pholes' you need to specify 'linkss' also")}
+  
+  
+  mate<-fin
+  mate2<-init
+  
+  init<-fin+(init-fin)*mag
+  
+  if(!is.null(linkss)&is.na(S)==T){S<-list2matrix(linkss)}
+  
+  posimpfin<-areasip(fin,S=S,PB=PA,PA=PA,SB=SB,H=H,V=V,a=NULL,q=q,Y=Y,j=j,D=D,St=St,Q=Q,graph=F,extpol=F)
+  posimp<-areasip(init,S=S,PB=PA,PA=PA,SB=SB,H=H,V=V,a=NULL,q=q,Y=Y,j=j,D=D,St=St,Q=Q,graph=F,extpol=F)
+  pofin<-areasip(fin,S=S,PB=PA,PA=PA,SB=SB,H=H,V=V,a=a,q=q,Y=Y,j=j,D=D,St=St,Q=Q,graph=F,extpol=F)
+  po<-areasip(init,S=S,PB=PA,PA=PA,SB=SB,H=H,V=V,a=a,q=q,Y=Y,j=j,D=D,St=St,Q=Q,graph=F,extpol=F)
+  posimpnohfin<-areasip(fin,S=S,PB=PA,PA=PA,SB=SB,H=NA,V=V,a=NULL,q=q,Y=Y,j=j,D=D,St=St,Q=Q,graph=F,extpol=F)
+  posimpnoh<-areasip(init,S=S,PB=PA,PA=PA,SB=SB,H=NA,V=V,a=NULL,q=q,Y=Y,j=j,D=D,St=St,Q=Q,graph=F,extpol=F)
+ 
+  matr<-init
+  M<-po$centros
+  areas<-po$areas
+  
+tpsgrid<-tpsgridpaolo(init,fin,linksTT=linkss,linksYY=linkss,axes2d=T,ext=ext,graphics=F,ngrid=ngrid)
+ 
+  veclist<-NULL
+  for(j in 1:nrow(M)){
+    vecj<-NULL
+    for(i in 1:nrow(matr)){
+      vec1ji<-2*(M[j,1]-matr[i,1])+2*(M[j,1]-matr[i,1])*log((M[j,1]-matr[i,1])^2+(M[j,2]-matr[i,2])^2)
+      vec2ji<-2*(M[j,2]-matr[i,2])+2*(M[j,2]-matr[i,2])*log((M[j,1]-matr[i,1])^2+(M[j,2]-matr[i,2])^2)
+      vecji<-c(vec1ji,vec2ji)
+      vecj<-rbind(vecj,vecji)
+    }
+    veclist<-c(veclist,list(vecj))
+  }
+  jac<-NULL
+  for(i in 1: length(veclist)){
+    jaci<-t(tpsgrid$B)+t(tpsgrid$W)%*%veclist[[i]]
+    jac<-c(jac,list(jaci))
+  }
+  
+  deltus<-NULL
+  dpl<-NULL
+  sens<-NULL
+  for(i in 1:length(jac)){
+    deltusi<-jac[[i]]-diag(nrow(jac[[i]]))
+    dpli<-0.5*(deltusi+t(deltusi)) 
+    seni<-0.5*matrix.trace(t(dpli)%*%dpli)
+    deltus<-c(deltus,list(deltusi))
+    dpl<-c(dpl,list(dpli))
+    sens<-c(sens,seni)
+  }
+  
+  lsens<-log2(sens)
+  sens2<-sens*areas
+  
+  jac2<-list2array(jac)
+  mean11<-mean(jac2[1,1,])
+  mean12<-mean(jac2[1,2,])
+  mean21<-mean(jac2[2,1,])
+  mean22<-mean(jac2[2,2,])
+  
+  detmean<-det(matrix(c(mean11,mean21,mean12,mean22),ncol=2))
+  
+  myj<-unlist(lapply(jac,det))
+  
+  
+  if(sen==F){obs<-log2(myj/detmean)}else{
+    
+    if(logsen==T){obs=lsens}else{obs=sens}
+    
+  }
+  
+  fit<- Tps(M, obs) 
+  summary(fit)
+  if(constr==F){
+    hull <- chull(fin)
+    indx=hull
+    if(invc==F){points <- fin[indx,]}else{points <- init[indx,]}
+    points <- rbind(points,points[1,])
+    sfe1<-spsample(Polygon(points),nadd,type="regular")
+    sr1<-sfe1@coords}else{
+      
+      
+      if(invc==F){mau<-fin[unique(posimpnoh$triangob$E[posimpnoh$triangob$EB%in%c(1)]),]}else{mau<-init[unique(posimpnoh$triangob$E[posimpnoh$triangob$EB%in%c(1)]),]}
+      matepro<-fin
+      matepro[1:nrow(fin)%in%unique(posimpnoh$triangob$E[posimpnoh$triangob$EB%in%c(1)])==F,]<-NA
+      faclinks<-as.factor(is.na(matepro[,1]))
+      newindlinks<-posfac(faclinks)
+      maulinks<-posimpnoh$triangob$E[posimpnoh$triangob$EB%in%c(1),]
+      #plotmyarrays(mate,links=array2list(matrix2arrayasis(maulinks,1)))
+      newmaulinks<-maulinks
+      newmaulinks[,1]<-c(1:nrow(maulinks))
+      newmaulinks[,2]<-match(maulinks[,2],maulinks[,1])
+      #plotmyarrays(mau,links=array2list(matrix2arrayasis(newmaulinks,1)),xlim=c(25,70))
+      
+      cycles2 <- function(links) {
+        require(ggm)
+        if (any(is.na(links))) stop("missing value/s in links")
+        mat <- matrix(0L, max(links), max(links))
+        mat[links] <- 1
+        lapply(ggm::fundCycles(mat), function(xa) rev(xa[ , 1L]))
+      }
+      
+      #plotmyarrays(mau[cycles2(newmaulinks)[[1]],],links=conslinks(nrow(mau),open=F))
+      
+      
+      
+      sfe1<-spsample(Polygon(rbind(mau[cycles2(newmaulinks)[[1]],],mau[cycles2(newmaulinks)[[1]],][1,])),nadd,type="regular")
+      sr1<-sfe1@coords
+    }
+  #points(sr1)
+  
+  pred<-predict(fit,sr1)
+  if(is.null(zlim)==T){zlim<-range(pred)}else{zlim<-zlim}
+  if(graphics==T){
+    par(oma=oma,mai=mai,mar=mar)
+    if(legend==F){ima<-image(xyz2img(cbind(sr1,pred),tolerance=tol),asp=1,xlim=tpsgrid$grid$xlim,ylim=tpsgrid$grid$ylim,col=makeTransparent(colorRampPalette(colors)(n = length(obs)),alpha=alpha),xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="",zlim=zlim)}else{
+      ima<-image.plot(xyz2img(cbind(sr1,pred),tolerance=tol),asp=1,xlim=tpsgrid$grid$xlim,ylim=tpsgrid$grid$ylim,col=makeTransparent(colorRampPalette(colors)(n = length(obs)),alpha=alpha),xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="",zlim=zlim)  
+    }
+    par(new=T)
+    plot(fin,xlim=tpsgrid$grid$xlim,ylim=tpsgrid$grid$ylim,asp=1,pch=pchs,cex=cexs,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+    if(is.null(linkss)==F){lineplot(fin,linkss,col=collinkss,lwd=lwds)}
+    lines(tpsgrid$grid$ngrid,xlim=tpsgrid$grid$xlim,ylim=tpsgrid$grid$ylim)
+    lines(tpsgrid$grid$ngrid2,xlim=tpsgrid$grid$xlim,ylim=tpsgrid$grid$ylim)
+    
+    if(plottarget==T){
+      par(new=T)
+      plot(init,xlim=tpsgrid$grid$xlim,ylim=tpsgrid$grid$ylim,asp=1,pch=pcht,cex=cext,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+      lineplot(init,linkss,col=collinkst,lwd=lwdt)
+    }
+  }
+  
+  pols<-NULL
+  pols2<-NULL
+  if(!is.na(pholes)){
+    for(i in 1:length(pholes)){
+      myindex<-which(apply(matrix(list2matrix(linkss)%in%pholes[[i]],ncol=2),1,sum)>1)
+      matili<-list2matrix(linkss)[myindex,]
+      
+      holi<-init[unique(sort(c(unique(matili[,1]),unique(matili[,2])))),]
+      hol2i<-fin[unique(sort(c(unique(matili[,1]),unique(matili[,2])))),]
+      si<-matrix(as.numeric(ordered(matili)),ncol=2)
+      holtriangi<-RTriangle::triangulate(pslg(holi,S=si))
+      holtriang2i<-RTriangle::triangulate(pslg(hol2i,S=si))
+      
+      holui<-holi[unique(holtriangi$E[ holtriangi$EB%in%c(1)]),]
+      holu2i<-hol2i[unique( holtriang2i$E[ holtriang2i$EB%in%c(1)]),]
+      
+      holiproi<-holi
+      holiproi[1:nrow(holi)%in%unique(holtriangi$E[holtriangi$EB%in%c(1)])==F,]<-NA
+      faclinkshi<-as.factor(is.na(holiproi[,1]))
+      newindlinkshi<-posfac(faclinkshi)
+      hlinks<-holtriangi$E[holtriangi$EB%in%c(1),]
+      newhlinks<-hlinks
+      newhlinks[,1]<-c(1:nrow(hlinks))
+      newhlinks[,2]<-match(hlinks[,2],hlinks[,1])
+      pols<-c(pols,list(holui[cycles2(newhlinks)[[1]],]))
+      pols2<-c(pols2,list(holu2i[cycles2(newhlinks)[[1]],]))
+      
+      if(graphics==T){
+        polygon(holui[cycles2(newhlinks)[[1]],],col="white",border=collinkss)
+        polygon(holu2i[cycles2(newhlinks)[[1]],],col="white",border=collinkst)}
+    }}
+  
+  
+  out<-list(mate=fin,mate2=init,centros=M,interpcoords=sr1,jacs=jac,detjac=myj,detmean=detmean,obs=obs,fit=fit,pred=pred,xlim=tpsgrid$grid$xlim,ylim=tpsgrid$grid$ylim,tol=tol,cols=makeTransparent(colorRampPalette(colors)(n = length(obs)),alpha=alpha),tpsgrid=tpsgrid,sumse=sum(sens2),pols=pols,pols2=pols2,areasipob=po)
+  out
+}
+#' @export
+
 
 helmert<-function(p)
 {H<-matrix(0, p, p)
@@ -94,67 +350,6 @@ lastsfac<-function(group){
     lastsres<-rbind(lastsres,lastresi)
   }
   return(lastsres)
-}
-#' @export
-
-
-lshift2<-function(array,factor,CR=NULL,locs=NULL,CSinit=F,scale=F,reflect=F,reorder=F,sc=F){
-  warning("individuals belonging to each factor must be consecutive")
-  library(Morpho)
-  library(abind)
-library(Biobase)
-  if(reorder==T){factor<-factor(factor,levels=unique(factor))}
-  
-  k<-dim(array)[1]
-  m<-dim(array)[2]
-  n<-dim(array)[3]
-  ng<-table(factor)
-  
-  
-  if(is.null(locs)==T){
-    
-    sepas<-sepgpa(array,factor,CSinit=CSinit,scale=scale,reflect=reflect)
-    
-    locs<-list2array(subListExtract(sepas$listofgpas,"mshape"))
-    
-  }else{locs<-locs}
-  
-  if(is.null(CR)==T){CR<-procSym(locs,CSinit=CSinit,scale=scale,reflect=reflect,pcAlign=F)$mshape}else{CR<-CR}
-  
-  if(CSinit==T){
-    CR<-scaleshapes(CR)[,,1]
-    locs<-scaleshapes(locs)
-    array<-scaleshapes(array)
-  }
-  
-  locsopas<-opaloop2(CR,locs,reflect=F)
-  locsop<-locsopas$looped
-  
-  
-  locsrot<-locsopas$rots
-  specop<-NULL
-  specrots<-NULL
-  for(i in 1:nlevels(factor)){
-    print(i)
-    specopas<-opaloop2(locsop[,,i],array[,,as.numeric(factor)==i])
-    specopi<-specopas$looped
-    specop<-abind::abind(specop,specopi)
-    specrotsi<-specopas$rots
-    specrots<-c(specrots,list(specrotsi))
-  }
-  
-  specrots2<-array(unlist(specrots),dim=c(m,m,n))
-  
-  specdiff2provv<-rep(array2list(locsop),ng)
-  specdiff2<-specop-array(unlist( specdiff2provv), dim = c(k, m, n))
-  
- 
-if(sc==T){
-specdiff2<-multiplarray(specdiff2,c(1/rep(apply(locs,3,cSize),ng)))
-valeu1<-(array(unlist(rep(list(CR),sum(ng))),dim=c(k,m,n)))+multiplarray(specdiff2,rep(cSize(CR),n))
-}else{
-  valeu1<-(array(unlist(rep(list(CR),sum(ng))),dim=c(k,m,n)))+specdiff2}
- out<-list("transported"=valeu1)
 }
 #' @export
 
@@ -656,8 +851,6 @@ ratesbygroup<-function(predictions,factor,indep,sss=F){
   return(prova5)
 }
 #' @export
-
-
 
 rep.row<-function(x,n){
 matrix(rep(x,each=n),nrow=n)
