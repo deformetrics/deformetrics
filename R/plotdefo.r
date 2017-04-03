@@ -49,7 +49,7 @@
 #' plotdefo(amy2d,linkss=linksdors,linkst=linksdors)
 #' orbitR<-centroids(amy2d$mshape[c(18,19,20,17,16,14,13,12,15),])
 #' orbitL<-centroids(amy2d$mshape[c(37,35,34,33,32,31,30,29,36),])
-#' plotdefo(amy2d,linkss=linksdors,linkst=linksdorsH=rbind(orbitR,orbitL),pholes=list(c(18,19,20,17,16,14,13,12,15),c(37,35,34,33,32,31,30,29,36)))
+#' plotdefo(amy2d,linkss=linksdors,linkst=rbind(orbitR,orbitL),pholes=list(c(18,19,20,17,16,14,13,12,15),c(37,35,34,33,32,31,30,29,36)))
 #' }
 #' @export
 plotdefo<-function(procsymobject,zlim=NULL,linkss=NULL,linkst=NULL,colss=1,colst=2,lwds=2,lwdt=2,cexs=0,cext=0,displ=F,axtit=NULL,mag=1,heat=T,mfrow=c(3,2),mar=c(0,0,0.3,0),mai=c(0,0,0.3,0),oma=c(0,0,3,0),colors=c("blue4","cyan2","yellow","red4"),alpha=1,magrange=1,exts=rep(0,6),PB=NA,PA=NA,S=NA,SB=NA,H=NA,V=3,a=NULL,q=NULL,Y=FALSE,j=FALSE,D=FALSE,St=Inf,Q=TRUE,constr=T,pholes=NA){
