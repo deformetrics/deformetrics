@@ -4,6 +4,60 @@
 #' @author Paolo Piras
 #' @export  
 
+mycca<-function(x,y,pch=19,col=1,group=NULL,labels=NULL,extl=F,legend=T,xl=NULL,yl=NULL,posl=c("topright"),cex=1,xlab=NULL,ylab=NULL,asp=NULL){
+  require(CCA)
+  require(vegan)
+  require(calibrate)
+  
+  myrda<-vegan::rda(y~x)
+  rsqadj<-RsquareAdj(myrda)
+  print(rsqadj)
+  
+  anovarda<-anova(myrda,step=2000)
+  print(anovarda)
+  
+  if(is.null(xlab)==T){xlab="Independent"}else{xlab=xlab}
+  if(is.null(ylab)==T){ylab="Dependent"}else{ylab=ylab}
+  if (!is.null(group)){
+    col=col
+    species<-as.numeric(group)
+    coli<-data.frame(group,as.numeric(group),col,pch)
+    colim<-aggregate(coli[,-1],by=list(coli[,1]),mean)}else{
+      coli<-data.frame(1,1,col,pch)
+      colim<-aggregate(coli[,-1],by=list(coli[,1]),mean) 
+    }
+  thecca<-rcc(as.matrix(x),as.matrix(y),0.1,0.1)
+  if(is.null(group)==T){plot(x,rcc(as.matrix(x),as.matrix(y),0.1,0.1)$scores$yscores[,1],col=col,pch=pch,cex=cex,xlab=xlab,ylab=ylab)}  
+  if (!is.null(group)){
+    
+    plot2dhull(cbind(x,thecca$scores$yscores[,1]),group,scalevariable=cex,pch=pch,col=col,colhull=colim[,3],clabel=0,legend=F,reorder=F,xlimi=range(x),ylimi=range(thecca$scores$yscores[,1]),asp=asp,xlab=xlab,ylab=ylab)
+  }
+  if (!is.null(labels)){textxy(x,thecca$scores$yscores,labels)}
+  
+  if(legend==T){
+    if(extl==T){
+      x11()
+      plot(x,y,col="white")
+      
+      legend(min(x),max(y),colim[,1], cex=1, col=colim[,3], pch=colim[,4],box.col="white")
+      }else{
+      if(is.null(xl)==T&is.null(yl)==T){
+        legend(posl,legend=colim[,1], cex=1, col=colim[,3], pch=colim[,4],bty='n')}else{
+        legend(xl,yl,colim[,1], cex=1, col=colim[,3], pch=colim[,4],bty='n')}
+      }
+  }
+  
+  if (!is.null(group)){
+    
+    if(dim(as.matrix(y))[2]>1){bygroup<-manymultgr(y,x,group)}else{
+      bygroup<-plotancova(y,x,group,legend=F,plot=F)$sint_results}
+  }else{bygroup=c("no group structure")}
+  
+  out<-list(xscores=thecca$scores$xscores,yscores=thecca$scores$yscores,AdjRsq=rsqadj,anovarda=anovarda,bygroup=bygroup)
+  return(out)
+}
+#' @export
+
 posfac<-function(factor){
 positions<-NULL
 for(k in 1:max(as.numeric(factor))){
