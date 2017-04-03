@@ -4,6 +4,29 @@
 #' @author Paolo Piras
 #' @export  
 
+posfac<-function(factor){
+positions<-NULL
+for(k in 1:max(as.numeric(factor))){
+  factor<-factor(factor,levels=unique(factor))
+  positioni<-which(as.numeric(factor)==k)
+  positions<-c(positions,list(positioni))
+}
+names(positions)<-levels(factor)
+sequ<-NULL
+for(i in 1:max(length(positions))){
+  seqi<-c(1:length(positions[[i]]))
+  sequ<-c(sequ,list(seqi))
+}
+
+pure<-rep(NA,length(unlist(positions)))
+for(j in 1:max(length(positions))){
+  pure<-replace(pure,positions[[j]],c(sequ[[j]]))
+}
+
+pure}
+#' @export
+
+
 areasip<-function(matrix,links=NULL,PB=NA,PA=NA,S=NA,SB=NA,H=NA,V=3,a=NULL,q=NULL,Y=FALSE,j=FALSE,D=FALSE,St=Inf,Q=TRUE,graph=T,extpol=F){
   if(!is.null(links)){warning("Links **must** identify, among other structures, a closed contour")}
   library(geometry)
