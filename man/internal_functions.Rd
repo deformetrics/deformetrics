@@ -4,6 +4,7 @@
 \alias{internal_functions}
 \title{internal_functions}
 \usage{
+areasip(matrix,links=NULL,PB=NA,PA=NA,S=NA,SB=NA,H=NA,V=3,a=NULL,q=NULL,Y=FALSE,j=FALSE,D=FALSE,St=Inf,Q=TRUE,graph=T,extpol=F)
 array2list(array)
 array2mat(array,inds,vars)
 biharm.new(vec1,vec2)
@@ -11,8 +12,8 @@ centershapes(array)
 centroids(array)
 firstsfac(group)
 helmert(p)
+heat2d(init,fin...)
 lastsfac(group)
-lshift2(array,factor,CR=NULL,locs=NULL,CSinit=F,scale=F,reflect=F,reorder=F,sc=F)
 makeTransparent(..., alpha=0.5)
 manymultgr(y,x,group,steps=5000)
 mopa(tt,yy,rot=c("mopa","opa"),CSinit = FALSE,volinit=FALSE,center=TRUE)

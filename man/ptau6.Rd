@@ -4,7 +4,8 @@
 \alias{ptau6}
 \title{ptau6}
 \usage{
-ptau6(array, factor, CSinit = T, sepure = F, polyn = 1)
+ptau6(array, factor, CSinit = T, sepure = F, polyn = 1, CR = NULL,
+  locs = NULL, perm = 999)
 }
 \arguments{
 \item{array}{numeric: an array kxmxn of landmark coordinates}
@@ -13,9 +14,11 @@ ptau6(array, factor, CSinit = T, sepure = F, polyn = 1)
 
 \item{CSinit}{logical: if TRUE shapes are scaled at unit size (default=TRUE)}
 
+\item{sepure}{logical: if TRUE separate per-group multivariate regression between shape and size are performed on shapes aligned after separate GPAs  (default=FALSE)}
+
 \item{polyn}{numeric: default=1 the degree of regression}
 
-\item{sepur}{logical: if TRUE separate per-group multivariate regression between shape and size are performed on shapes aligned after separate GPAs  (default=FALSE)}
+\item{perm}{numeric: number of permutations for group non parametric regression}
 }
 \description{
 This function perform the Euclidean Parallel transport for allometric investigations using the Linear Shift startegy described in Piras et al (2016). The Linear Shift is performed on MANCOVA predictions and original data are projected on PCA space computed on them.
@@ -42,7 +45,9 @@ objptau<-ptau6(dors4,factordors4,CSinit=T)
 plotptau5(objptau,linksdors,pch=as.numeric(objptau$factorord),col=rep(1,length(objptau$factorord)),round(max(centroid.size(objptau$arrayord)),digits=0)/2,shiftnegy=2,mag=2,subplotdim=1)
 ## End(Not run)
 }
-
+}
+\references{
+Piras P., Teresi L., Traversetti L., Varano V, Gabriele S., Kotsakis T., Raia P., Puddu P.E., Scalici M. (2016). The conceptual framework of ontogenetic trajectories: Parallel Transport allows the recognition and visualization of pure deformation patterns. Evolution and Development 18: 182-200. doi: 10.1111/ede.12186
 }
 \author{
 Paolo Piras

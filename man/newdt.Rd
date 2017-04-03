@@ -19,7 +19,7 @@ newdt(array, group, CR = NULL, pole = CR, diffpole = F, locs = NULL,
 
 \item{diffpole=F}{logical: if TRUE the pole is not coincident with CR. This is not supposed to be used by common users.}
 
-\item{locs=NULL:}{if NULL the local references ar estimated via separate per-group GPAs. Oterwise the specifiesed locs are used-}
+\item{locs=NULL:}{if NULL the local references ar estimated via separate per-group GPAs. Oterwise the specifiesed locs are used.}
 
 \item{center=T}{logical: if TRUE shapes are centered.}
 
@@ -38,14 +38,6 @@ out matrix: a matrix containing the transported shapes.
 }
 \description{
 This function performs the TPS Parallel Transport according to Varano et al (accepted). Deformation occurring within groups are estimate relatively to per-group local references ("locs" argument") and applied to a Common Reference ("CR").
-}
-\examples{
-\dontrun{ 
-data(case1)
-group<-factor(rep(1:5,each=21))
-plottraj(procSym(case1,CSinit=T)$PCscores[,1:2],group,asp=1)######## a classic approach does not recover the cycle
-dtcase1<-newdt(case1,group,CR=procSym(case1[,,firstsfac(group)],CSinit=F,reflect=F,scale=F,pcAlign=F)$mshape,locs=case1[,,firstsfac(group)],tolrot=10)
-}  
 }
 \author{
 Paolo Piras
