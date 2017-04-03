@@ -4,6 +4,33 @@
 #' @author Paolo Piras
 #' @export  
 
+reparray<-function(array,n,type=c("sequ","block")){
+  
+  if(is.null(dimnames(array)[3])){dimnames(array)[3]<-list(c(1:dim(array)[3]))}else{dimnames(array)[3]<-dimnames(array)[3]}
+
+require(abind)
+myarray2<-NULL
+steps<-n
+
+if(type=="sequ"){
+  
+  
+  for(i in 1:dim(array)[3]){
+    temp1<-rep(list(array(array[,,i],dim=c(dim(array)[1],dim(array)[2],1))),steps)
+    temp2<-list2array(temp1)
+    myarray2<-abind::abind(myarray2,temp2)
+  }
+  return(myarray2)}else{NULL}
+    
+  
+  if(type=="block"){
+    temp1<-list2matrix(rep(array2list(array),n))
+    temp2<-matrix2arrayasis(temp1,dim(array)[1])
+    return(temp2)
+  }else{NULL}
+}
+#' @export  
+
 pt2dvaruno<-function(mua,mub,va,doopa=T,sss=T,tol=0.001){
   library(shapes)
   library(matrixcalc)
