@@ -353,6 +353,17 @@ lastsfac<-function(group){
 }
 #' @export
 
+list2matrix<-function(mylist){
+  final<-NULL
+  for(i in 1:length(mylist)){
+    temp<-mylist[[i]]
+    final<-rbind(final,temp)
+  }
+  #if(is.null(names(mylist))==F){rownames(final)<-names(mylist)}
+  return(final)
+}               
+#' @export               
+               
 makeTransparent = function(..., alpha=0.5) {
 
   if(alpha<0 | alpha>1) stop("alpha must be between 0 and 1")
