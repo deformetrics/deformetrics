@@ -4,6 +4,53 @@
 #' @author Paolo Piras
 #' @export  
 
+pt2dvaruno<-function(mua,mub,va,doopa=T,sss=T,tol=0.001){
+  library(shapes)
+  library(matrixcalc)
+  if(doopa==T){
+    theopamuamub<-procOPA(mub,mua,scale=F,reflect=F)
+    mua<-theopamuamub$Bhat
+    rotmua<-theopamuamub$R
+    
+    if(rotmua[1,1]+1<tol){mua<--mua}
+    
+    if(sss==F){
+      va<-va-((matrix.trace(t(mua)%*%va)/matrix.trace(t(mua)%*%mua))*mua)
+    }
+    
+    theopavamua<-procOPA(mua,va,scale=F)
+    va<-theopavamua$Bhat
+    rotva<-theopavamua$R
+    
+    if(rotva[1,1]+1<tol){va<--va}
+    
+  }else{
+    if(sss==F){
+      va<-va-((matrix.trace(t(mua)%*%va)/matrix.trace(t(mua)%*%mua))*mua)
+    }
+    rotmua<-NULL
+    rotva<-NULL
+  }
+  muaz <- complex(real = mua[,1], imaginary = mua[,2])
+  mubz <- complex(real = mub[,1], imaginary = mub[,2])
+  vaz <- complex(real = va[,1], imaginary = va[,2])
+  muazbarra<-muaz/(sqrt(muaz%*%(Conj(muaz))))
+  mubzbarra<-mubz/(sqrt(mubz%*%(Conj(mubz))))
+  if(sss==T){ 
+    vbz<-vaz-1i*((Im(Conj(mubzbarra)%*%vaz))/(1+Conj(muazbarra)%*%mubzbarra))*(muazbarra+mubzbarra)}else{
+      vbz<-vaz-1i*((Im(Conj(mubzbarra)%*%vaz))/(1+Conj(muazbarra)%*%mubzbarra))*(muazbarra+mubzbarra)-((Re(Conj(mubzbarra)%*%vaz))/(1+Conj(muazbarra)%*%mubzbarra))*(muazbarra+mubzbarra)}
+  
+  vazbarra<-vaz/(sqrt(vaz%*%(Conj(vaz))))
+  eps<-Re(sqrt(2*Im(Conj(mubzbarra)%*%vazbarra)^2/(1+Conj(muazbarra)%*%mubzbarra)))
+  
+  eps2<-Re(sqrt(2*Mod(Conj(mubzbarra)%*%vazbarra)^2/(1+Conj(muazbarra)%*%mubzbarra)))
+  
+  vb<-cbind(Re(vbz),Im(vbz))
+  out<-list(vb=vb,rotmua=rotmua,rotva=rotva,eps=eps,eps2=eps2)
+  return(out)
+}
+#' @export
+
 opaloop<-function(GM,array,scale=F,reflect=F){
 library(abind)
 k<-dim(array)[1]
