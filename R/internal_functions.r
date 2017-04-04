@@ -4,6 +4,23 @@
 #' @author Paolo Piras
 #' @export  
 
+serpred<-function(dep,indep,polyn=1,length.out=10){
+sizes<-seq(min(indep),max(indep),length.out=length.out)
+sizesvetts<-NULL
+thelm<-lm(dep~poly(indep,degree=polyn,raw=TRUE))
+for(i in 1:length(sizes)){
+if(polyn==1){sizesvettsi<-c(1,sizes[i])}else{sizesvettsi<-c(1,poly(c(sizes[i]),degree=polyn,raw=T))}
+sizesvetts<-rbind(sizesvetts,sizesvettsi)}
+thepredicts<-NULL
+  for(j in 1:nrow(sizesvetts)){
+  thepredictsj<-c(crossprod(coef(thelm),sizesvetts[j,]))
+  thepredicts<-rbind(thepredicts,thepredictsj)
+}
+thepredicts
+}
+#' @export
+
+
 plot2dhull<-function(matrix,group,scalevariable=1,asp=1,extl=F,legend=T,xl=NULL,yl=NULL,posl=c("topright"),labels=NULL,clabel=0,pch=19,lwd=0.5,colhull=NULL,col=as.numeric(group),xlab=NULL,ylab=NULL,grey=F,xlimi=range(matrix[,1])*1.3,ylimi=range(matrix[,2])*1.3,reorder=T,alpha=rep(0,nlevels(group))){
   library(MASS)
   library(compositions)
