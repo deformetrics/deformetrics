@@ -30,7 +30,7 @@
 #' pc1seq<-scoresequencearray(my2d$mshape,min(my2d$PCscores[,1]),max(my2d$PCscores[,1]),1,my2d$PCs)
 #' par(mfrow=c(4,4))
 #' for(i in 1:dim(pc1seq)[3]){
-#'   plotmyarrays(pc1seq[,,i],links=linksdors,cex=0,txt=F)
+#'   plotmyarrays(pc1seq[,,i],links=linksdors,cex=0,txt=F)}
 #' }
 #' @export 
 plotmyarrays<-function(x,l=c(1:dim(x)[1]),v=c(1:dim(x)[2]),ind=c(1:dim(x)[3]),group=NULL,links=NULL,xlim=range(x),ylim=range(x),col=NULL,txt=T,lwd=1,pch=NULL,cex=NULL,asp=1,cextext=1,xlab="",ylab="",zlab="",xaxt="s",yaxt="s"){
