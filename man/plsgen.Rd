@@ -4,8 +4,9 @@
 \alias{plsgen}
 \title{plsgen}
 \usage{
+  
 plsgen(block1, block2, plsn = 1, links1 = NULL, links2 = NULL,
-  commonref = F, heatmap = F, heatcolors = c("blue4", "cyan2", "yellow",
+  commonref = F, heatmap = F, zlim=NULL, heatcolors = c("blue4", "cyan2", "yellow",
   "red4"), triang1 = NULL, triang2 = NULL, alpha = 1, S1 = NA,
   S2 = NA, from1 = NULL, to1 = NULL, from2 = NULL, to2 = NULL,
   rounds = 0, sdx = 1, sdy = 1, labels = NULL, group = NULL,
