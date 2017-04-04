@@ -19,7 +19,7 @@
 #' pc1seq<-scoresequencearray(amy2d$mshape,min(amy2d$PCscores[,1]),max(amy2d$PCscores[,1]),1,amy2d$PCs)
 #' par(mfrow=c(4,4))
 #' for(i in 1:dim(pc1seq)[3]){
-#' plotmyarrays(pc1seq[,,i],links=linksdors,cex=0,txt=F)
+#' plotmyarrays(pc1seq[,,i],links=linksdors,cex=0,txt=F)}
 #' }
 #' @export
 scoresequencearray<-function(mshape,from,to,pcn,rotation,mag=1,frames=15,type=1){
