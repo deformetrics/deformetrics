@@ -29,6 +29,11 @@ myarray array: an kxmxn array of predited shapes
 This function computes a sequence of shapes computed by deformed a reference shape ("mshape" argument) according to the eigenvectors specified in "rotation" argument. The sequence is computed in the interval between "from" and "to" argument. Usually the "rotation" argument comes from a PCA but any ordination method could be used.
 }
   
+  
+ \author{
+Paolo Piras
+} 
+  
 \examples{
 \dontrun{ 
 data(my2d)
@@ -39,8 +44,6 @@ par(mfrow=c(4,4))
 for(i in 1:dim(pc1seq)[3]){
 plotmyarrays(pc1seq[,,i],links=linksdors,cex=0,txt=F)}
 }  
+}  
   
-  
-\author{
-Paolo Piras
-}
+
