@@ -41,7 +41,6 @@ library(gdata)
 lscase1<-lshift2(case1,group,CR=procSym(case1[,,firstsfac(group)],CSinit=F,reflect=F,scale=F,pcAlign=F)$mshape,locs=case1[,,firstsfac(group)])
 plottraj(procSym(lscase1$transported,CSinit=T)$PCscores[,1:2],group,asp=1) #### very similar to Levi Civita
 }  
-@export 
 }
 \references{
 Piras P., Teresi L., Traversetti L., Varano V, Gabriele S., Kotsakis T., Raia P., Puddu P.E., Scalici M. (2016). The conceptual framework of ontogenetic trajectories: Parallel Transport allows the recognition and visualization of pure deformation patterns. Evolution and Development 18: 182-200. doi: 10.1111/ede.12186
