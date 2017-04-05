@@ -42,3 +42,20 @@ This function performs the TPS Parallel Transport according to Varano et al (acc
 \author{
 Paolo Piras
 }
+
+
+\examples{
+\dontrun{ 
+data(case1)
+group<-factor(rep(1:5,each=21))
+plottraj(procSym(case1,CSinit=T)$PCscores[,1:2],group,asp=1)######## a classic approach does not recover the cycle
+dtcase1<-newdt(case1,group,CR=procSym(case1[,,firstsfac(group)],CSinit=F,reflect=F,scale=F,pcAlign=F)$mshape,locs=case1[,,firstsfac(group)],tolrot=10)
+plottraj(procSym(dtcase1,CSinit=T)$PCscores[,1:2],group,asp=1)######## transported data recover the cycle
+}
+}  
+
+
+
+
+
+
