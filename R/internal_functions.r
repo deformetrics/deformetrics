@@ -4,6 +4,139 @@
 #' @author Paolo Piras
 #' @export  
 
+plotdefo3d<-function(procsymobject,triang=NULL,links=NULL,collinks=1,lwd=1,axtit=NULL,mags=rep(1,3),heat=F,scaleramp=F,heateuc=F,sign=T,colors=c("blue4","cyan2","yellow","red4"),alpha=1,from=NULL,to=NULL,out=F,plot=T){
+  if(is.null(axtit)==T){axtit=c("PC1+","PC2+","PC3+","PC1-","PC2-","PC3-")}else{axtit=axtit}
+  texts<-axtit
+  if(!is.null(triang)==T&&ncol(triang)>3){stop("I want triangles matrix in the form nx3")}
+  
+  mshape<-procsymobject$mshape
+  pc1pos<-showPC(max(procsymobject$PCscores[,1])*mags[1],procsymobject$PCs[,1],procsymobject$mshape)
+  pc1neg<-showPC(min(procsymobject$PCscores[,1])*mags[1],procsymobject$PCs[,1],procsymobject$mshape)
+  pc2pos<-showPC(max(procsymobject$PCscores[,2])*mags[2],procsymobject$PCs[,2],procsymobject$mshape)
+  pc2neg<-showPC(min(procsymobject$PCscores[,2])*mags[2],procsymobject$PCs[,2],procsymobject$mshape)
+  pc3pos<-showPC(max(procsymobject$PCscores[,3])*mags[3],procsymobject$PCs[,3],procsymobject$mshape)
+  pc3neg<-showPC(min(procsymobject$PCscores[,3])*mags[3],procsymobject$PCs[,3],procsymobject$mshape)
+  
+  if(heat==F&heateuc==F){
+    
+    
+    allshapes<-rbind(pc1pos,pc1neg,pc2pos,pc2neg,pc3pos,pc3neg)
+    allshapes<-matrix2arrayasis(allshapes,nrow(pc1pos))
+    css<-apply(allshapes,3,cSize)
+    themax<-allshapes[,,which.max(css)]
+    
+    if(plot==T){
+    open3d(windowRect=c(100,100,1000,1000)) 
+    mat <- matrix(1:12, ncol=2)
+    layout3d(mat, height = rep(c(3,1), 3), model = "inherit")
+    plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+    plot3d(pc1pos,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+    if(is.null(links)==F){lineplot(pc1pos,links,col=collinks,lwd=lwd)}
+    next3d()
+    text3d(0,0,0, texts[1])
+    next3d()
+    plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+    plot3d(pc2pos,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+    if(is.null(links)==F){lineplot(pc2pos,links,col=collinks,lwd=lwd)}
+    next3d()
+    text3d(0,0,0, texts[2])
+    next3d()
+    plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+    plot3d(pc3pos,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+    if(is.null(links)==F){lineplot(pc3pos,links,col=collinks,lwd=lwd)}
+    next3d()
+    text3d(0,0,0, texts[3])
+    next3d()
+    plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+    plot3d(pc1neg,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+    if(is.null(links)==F){lineplot(pc1neg,links,col=collinks,lwd=lwd)}
+    next3d()
+    text3d(0,0,0, texts[4])
+    next3d()
+    plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+    plot3d(pc2neg,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+    if(is.null(links)==F){lineplot(pc2neg,links,col=collinks,lwd=lwd)}
+    next3d()
+    text3d(0,0,0, texts[5])
+    next3d()
+    plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+    plot3d(pc3neg,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+    if(is.null(links)==F){lineplot(pc3neg,links,col=collinks,lwd=lwd)}
+    next3d()
+    text3d(0,0,0, texts[6])}
+  }
+  if (heat==T){
+    
+    myh1pos<-heat3d(pc1pos,mshape,triang,lines=F,linkss=links,graphics=F,from=from,to=to,colors=colors,alpha=alpha,scaleramp=scaleramp)
+    myh1neg<-heat3d(pc1neg,mshape,triang,lines=F,linkss=links,graphics=F,from=from,to=to,colors=colors,alpha=alpha,scaleramp=scaleramp)
+    myh2pos<-heat3d(pc2pos,mshape,triang,lines=F,linkss=links,graphics=F,from=from,to=to,colors=colors,alpha=alpha,scaleramp=scaleramp)
+    myh2neg<-heat3d(pc2neg,mshape,triang,lines=F,linkss=links,graphics=F,from=from,to=to,colors=colors,alpha=alpha,scaleramp=scaleramp)
+    myh3pos<-heat3d(pc3pos,mshape,triang,lines=F,linkss=links,graphics=F,from=from,to=to,colors=colors,alpha=alpha,scaleramp=scaleramp)
+    myh3neg<-heat3d(pc3neg,mshape,triang,lines=F,linkss=links,graphics=F,from=from,to=to,colors=colors,alpha=alpha,scaleramp=scaleramp)
+  }
+  if (heateuc==T){
+    myh1pos<-diffonmesh(mshape,pc1pos,t(triang),graph=F,from=from,to=to,rampcolors=colors,alphas=c(alpha,0.7),sign=sign)
+    myh1neg<-diffonmesh(mshape,pc1neg,t(triang),graph=F,from=from,to=to,rampcolors=colors,alphas=c(alpha,0.7),sign=sign)
+    myh2pos<-diffonmesh(mshape,pc2pos,t(triang),graph=F,from=from,to=to,rampcolors=colors,alphas=c(alpha,0.7),sign=sign)
+    myh2neg<-diffonmesh(mshape,pc2neg,t(triang),graph=F,from=from,to=to,rampcolors=colors,alphas=c(alpha,0.7),sign=sign)
+    myh3pos<-diffonmesh(mshape,pc3pos,t(triang),graph=F,from=from,to=to,rampcolors=colors,alphas=c(alpha,0.7),sign=sign)
+    myh3neg<-diffonmesh(mshape,pc3neg,t(triang),graph=F,from=from,to=to,rampcolors=colors,alphas=c(alpha,0.7),sign=sign)
+    
+  }
+  
+  allshapes<-rbind(t(myh1pos$obm$colMesh$vb[-4,]),t(myh1neg$obm$colMesh$vb[-4,]),t(myh2pos$obm$colMesh$vb[-4,]),t(myh2neg$obm$colMesh$vb[-4,]),t(myh3pos$obm$colMesh$vb[-4,]),t(myh3neg$obm$colMesh$vb[-4,]))
+  allshapes<-matrix2arrayasis(allshapes,nrow(t(myh1pos$obm$colMesh$vb[-4,])))
+  css<-apply(allshapes,3,cSize)
+  themax<-allshapes[,,which.max(css)]
+  if(heat==T|heateuc==T){
+    if(plot==T){
+    open3d(windowRect=c(100,100,1000,1000)) 
+    mat <- matrix(1:12, ncol=2)
+    layout3d(mat, height = rep(c(3,1), 3), model = "inherit")
+    plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+    shade3d(myh1pos$obm$colMesh,alpha=alpha)
+    if(is.null(links)==F){lineplot(t(myh1pos$obm$colMesh$vb[-4,]),links,col=collinks,lwd=lwd)}
+    next3d()
+    text3d(0,0,0, texts[1])
+    next3d()
+    plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+    shade3d(myh2pos$obm$colMesh,alpha=alpha) 
+    if(is.null(links)==F){lineplot(t(myh2pos$obm$colMesh$vb[-4,]),links,col=collinks,lwd=lwd)}
+    next3d()
+    text3d(0,0,0, texts[2])
+    next3d()
+    plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+    shade3d(myh3pos$obm$colMesh,alpha=alpha) 
+    if(is.null(links)==F){lineplot(t(myh3pos$obm$colMesh$vb[-4,]),links,col=collinks,lwd=lwd)}
+    next3d()
+    text3d(0,0,0, texts[3])
+    next3d()
+    plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+    shade3d(myh1neg$obm$colMesh,alpha=alpha)
+    if(is.null(links)==F){lineplot(t(myh1neg$obm$colMesh$vb[-4,]),links,col=collinks,lwd=lwd)}
+    next3d()
+    text3d(0,0,0, texts[4])
+    next3d()
+    plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+    shade3d(myh2neg$obm$colMesh,alpha=alpha) 
+    if(is.null(links)==F){lineplot(t(myh2neg$obm$colMesh$vb[-4,]),links,col=collinks,lwd=lwd)}
+    next3d()
+    text3d(0,0,0, texts[5])
+    next3d()
+    plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+    shade3d(myh3neg$obm$colMesh,alpha=alpha) 
+    if(is.null(links)==F){lineplot(t(myh3neg$obm$colMesh$vb[-4,]),links,col=collinks,lwd=lwd)}
+    next3d()
+    text3d(0,0,0, texts[6])}
+  }
+  dimnames(allshapes)[[3]]<-c("pc1pos","pc1neg","pc2pos","pc2neg","pc3pos","pc3neg")
+  if(out==T){
+    if(heat==T){outp<-list(pc1pos=myh1pos$obm$colMesh,pc1neg=myh1neg$obm$colMesh,pc2pos=myh2pos$obm$colMesh,pc2neg=myh2neg$obm$colMesh,pc3pos=myh3pos$obm$colMesh,pc3neg=myh3neg$obm$colMesh)}else{outp<-allshapes}
+    }else{outp<-NULL}
+  outp
+}
+#' @export
+
 conslinks<-function(number,open=T){
 k=seq(1:(number-1))
 aw=NULL
@@ -255,7 +388,7 @@ out
 
 #' @export
 
-diffonmesh<-function(lmsource,lmtarget,triang,colsource=1,alphas=c(0.7,0.3),grid=F,aff=F,nonaff=F,distscale=1, from = NULL,to = NULL,tol=NULL,sign=F,title=T,displace = FALSE,plotsource=T, steps = 20,rampcolors = colorRamps::blue2green2red(steps - 1),graph=T){
+diffonmesh<-function(lmsource,lmtarget,triang,colsource=1,alphas=c(0.7,0.3),grid=F,aff=F,nonaff=F,distscale=1, scaleramp=F,from = NULL,to = NULL,tol=NULL,sign=F,title=T,displace = FALSE,plotsource=T, steps = 20,rampcolors = colorRamps::blue2green2red(steps - 1),graph=T){
   for ( i in c("Morpho","Rvcg","rgl")) {
     if (!require(i,character.only = TRUE))
       stop(paste0("please install package ",i))
@@ -278,9 +411,9 @@ diffonmesh<-function(lmsource,lmtarget,triang,colsource=1,alphas=c(0.7,0.3),grid
     ###between pointclouds
     distvec <- sqrt(rowSums((lmsource-lmtarget)^2))/distscale
     if(graph==T){
-    them<-meshDist(lmtarget,distvec = distvec,from=from,to=to,tol=tol,sign=sign,steps = 20,rampcolors =rampcolors)
+    them<-meshDist(lmtarget,distvec = distvec,from=from,to=to,tol=tol,sign=sign,steps = 20,rampcolors =rampcolors,scaleramp=scaleramp)
     }else{
-      them<-meshDist(lmtarget,distvec = distvec,from=from,to=to,tol=tol,sign=sign,steps = 20,rampcolors =rampcolors,shade=F)
+      them<-meshDist(lmtarget,distvec = distvec,from=from,to=to,tol=tol,sign=sign,steps = 20,rampcolors =rampcolors,shade=F,scaleramp=scaleramp)
       
     }
       
@@ -295,11 +428,11 @@ diffonmesh<-function(lmsource,lmtarget,triang,colsource=1,alphas=c(0.7,0.3),grid
   distvec2 <- sqrt(rowSums((vert2points(thesource_mesh)-vert2points(thetarget_warped))^2))/distscale
   if(graph==T){
   if(plotsource==T){shade3d(thesource_mesh,col=colsource,alpha=alphas[2])}
-  them<-meshDist(thetarget_mesh,thesource_mesh,distvec=distvec2,alpha=alphas[1],add=T,from=from,to=to,tol=tol,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors)
+  them<-meshDist(thetarget_mesh,thesource_mesh,distvec=distvec2,alpha=alphas[1],add=T,from=from,to=to,tol=tol,scaleramp=scaleramp,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors)
   if(title==T){title3d("total")
     title("total")}
   }else{
-    them<-meshDist(thetarget_mesh,distvec=distvec2,alpha=alphas[1],add=T,from=from,to=to,tol=tol,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors,shade=F)
+    them<-meshDist(thetarget_mesh,distvec=distvec2,alpha=alphas[1],add=T,from=from,to=to,tol=tol,scaleramp=scaleramp,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors,shade=F)
 }
   
   
@@ -315,11 +448,11 @@ diffonmesh<-function(lmsource,lmtarget,triang,colsource=1,alphas=c(0.7,0.3),grid
       if(graph==T){
       open3d()
       shade3d(thetarget_mesh,col=1,alpha=alphas[2])
-      themna<-meshDist(thesource_mesh,distvec=distvec3,add=T,from=from,to=to,tol=tol,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors)
+      themna<-meshDist(thesource_mesh,distvec=distvec3,add=T,from=from,to=to,tol=tol,scaleramp=scaleramp,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors)
       if(title==T){title3d("non affine")
         title("non-affine")}
       }else{
-        themna<-meshDist(thesource_mesh,distvec=distvec3,add=T,from=from,to=to,tol=tol,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors,shade=F)
+        themna<-meshDist(thesource_mesh,distvec=distvec3,add=T,from=from,to=to,tol=tol,scaleramp=scaleramp,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors,shade=F)
         }
       
       
@@ -330,11 +463,11 @@ diffonmesh<-function(lmsource,lmtarget,triang,colsource=1,alphas=c(0.7,0.3),grid
       if(graph==T){
       open3d()
       shade3d(thetarget_mesh,col=1,alpha=alphas[2])
-      thema<-meshDist(thesource_mesh,distvec=distaffnonaffon4,add=T,from=from,to=to,tol=tol,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors)
+      thema<-meshDist(thesource_mesh,distvec=distaffnonaffon4,add=T,from=from,to=to,tol=tol,scaleramp=scaleramp,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors)
       if(title==T){title3d("affine")
         title("affine")}
       }else{
-        thema<-meshDist(thesource_mesh,distvec=distaffnonaffon4,add=T,from=from,to=to,tol=tol,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors,shade=F)
+        thema<-meshDist(thesource_mesh,distvec=distaffnonaffon4,add=T,from=from,to=to,tol=tol,scaleramp=scaleramp,sign=sign,displace=displace,steps = 20,rampcolors =rampcolors,shade=F)
       }
       
       
@@ -344,8 +477,8 @@ diffonmesh<-function(lmsource,lmtarget,triang,colsource=1,alphas=c(0.7,0.3),grid
   }
   out<-list(obm=them,themna=themna,thema=thema)
 }
-
 #' @export
+
 mycca<-function(x,y,pch=19,col=1,group=NULL,labels=NULL,extl=F,legend=T,xl=NULL,yl=NULL,posl=c("topright"),cex=1,xlab=NULL,ylab=NULL,asp=NULL){
   require(CCA)
   require(vegan)
@@ -421,7 +554,6 @@ for(j in 1:max(length(positions))){
 
 pure}
 #' @export
-
 
 areasip<-function(matrix,links=NULL,PB=NA,PA=NA,S=NA,SB=NA,H=NA,V=3,a=NULL,q=NULL,Y=FALSE,j=FALSE,D=FALSE,St=Inf,Q=TRUE,graph=T,extpol=F){
   if(!is.null(links)){warning("Links **must** identify, among other structures, a closed contour")}
@@ -918,7 +1050,7 @@ loopedi<-array(opai$yrot,dim=c(k,m,1))
 }
 #' @export
 
-ordiwithshapes<-function(mshape,scores,rotation,whichaxes=c(1,2),addata=NULL,asp=1,xlab="PC1",ylab="PC2",triang=NULL,factraj=NULL,coltraj=NULL,distscale=1,from=0,to=NULL,mag=1,procSym=T,subplotdim=2,legendgroup=NULL,shiftposx=1.5,shiftnegx=1.5,shiftposy=1.5,shiftnegy=1.5,links=NULL,collinks=1,grouphull=NULL,colhull=NULL,labels=NULL,labelscex=1,pch=19,col=1,cex=1,mult=0.5,tit3d=T,plotsource=T,xlim=extendrange(extendrange(range(scores[,whichaxes[1]]),f=mult)),ylim=extendrange(extendrange(range(scores[,whichaxes[2]]),f=mult))){
+ordiwithshapes<-function(mshape,scores,rotation,whichaxes=c(1,2),addata=NULL,asp=1,xlab="PC1",ylab="PC2",triang=NULL,factraj=NULL,coltraj=NULL,distscale=1,scaleramp=F,from=0,to=NULL,mag=1,procSym=T,subplotdim=2,legendgroup=NULL,shiftposx=1.5,shiftnegx=1.5,shiftposy=1.5,shiftnegy=1.5,links=NULL,collinks=1,grouphull=NULL,colhull=NULL,labels=NULL,labelscex=1,pch=19,col=1,cex=1,mult=0.5,tit3d=T,plotsource=T,xlim=extendrange(extendrange(range(scores[,whichaxes[1]]),f=mult)),ylim=extendrange(extendrange(range(scores[,whichaxes[2]]),f=mult))){
   library(Morpho)
   library(spatstat)
   library(calibrate)
@@ -999,18 +1131,18 @@ ordiwithshapes<-function(mshape,scores,rotation,whichaxes=c(1,2),addata=NULL,asp
       open3d(windowRect=c(100,100,1000,1000)) 
       mat <- matrix(1:8, ncol=2)
       layout3d(mat, height = rep(c(2,1), 2), model = "inherit")
-      diffonmesh(mshape,pc1pos,triang,title=F,distscale=distscale,from=from,to=to,plotsource=plotsource)
+      diffonmesh(mshape,pc1pos,triang,title=F,distscale=distscale,from=from,to=to,plotsource=plotsource,scaleramp=scaleramp)
       next3d()
       text3d(0,0,0,paste("Scores",whichaxes[1],"pos"))
       next3d()
-      diffonmesh(mshape,pc2pos,triang,title=F,distscale=distscale,from=from,to=to,plotsource=plotsource)
+      diffonmesh(mshape,pc2pos,triang,title=F,distscale=distscale,from=from,to=to,plotsource=plotsource,scaleramp=scaleramp)
       next3d()
       text3d(0,0,0,paste("Scores",whichaxes[2],"pos"))
       next3d() 
-      diffonmesh(mshape,pc1neg,triang,title=F,distscale=distscale,from=from,to=to,plotsource=plotsource)
+      diffonmesh(mshape,pc1neg,triang,title=F,distscale=distscale,from=from,to=to,plotsource=plotsource,scaleramp=scaleramp)
       next3d();text3d(0,0,0,paste("Scores",whichaxes[1],"neg"))
       next3d()
-      diffonmesh(mshape,pc2neg,triang,title=F,distscale=distscale,from=from,to=to,plotsource=plotsource)
+      diffonmesh(mshape,pc2neg,triang,title=F,distscale=distscale,from=from,to=to,plotsource=plotsource,scaleramp=scaleramp)
       next3d();text3d(0,0,0,paste("Scores",whichaxes[2],"neg"))
     }
     
