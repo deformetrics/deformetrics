@@ -85,10 +85,10 @@ shapearray<-procSym(my3d,CSinit=T,scale=F)$orpdata####provacambiandoCSinitperils
 indep<-amy3d$size
 triang<-t(sur_ent$it)
 group<-factor(substr(dimnames(amy3d$orpdata)[[3]],1,7))
-shaperegr(shapearray,indep,links=links)
-shaperegr(shapearray,indep,links=links,group=group,colcca=as.numeric(group),pchcca=as.numeric(group))
-prov<-shaperegr(shapearray,indep,links=links,group=group,heatmap=T,triang=triang)
-prov2<-shaperegr(shapearray,cbind(amy3d$size,rnorm(length(indep),0,1)),links=links,group=group,heatmap=T,triang=triang)
+shaperegr(shapearray,indep,links=linksentire)
+shaperegr(shapearray,indep,links=linksentire,group=group,colcca=as.numeric(group),pchcca=as.numeric(group))
+prov<-shaperegr(shapearray,indep,links=linksentire,group=group,heatmap=T,triang=triang)
+prov2<-shaperegr(shapearray,cbind(amy3d$size,rnorm(length(indep),0,1)),links=linksentire,group=group,heatmap=T,triang=triang)
 }
 }
 \author{
