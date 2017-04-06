@@ -53,10 +53,10 @@
 #' indep<-amy3d$size
 #' triang<-t(sur_ent$it)
 #' group<-factor(substr(dimnames(amy3d$orpdata)[[3]],1,7))
-#' shaperegr(shapearray,indep,links=links)
-#' shaperegr(shapearray,indep,links=links,group=group,colcca=as.numeric(group),pchcca=as.numeric(group))
-#' prov<-shaperegr(shapearray,indep,links=links,group=group,heatmap=T,triang=triang)
-#' prov2<-shaperegr(shapearray,cbind(amy3d$size,rnorm(length(indep),0,1)),links=links,group=group,heatmap=T,triang=triang)
+#' shaperegr(shapearray,indep,links=linksentire)
+#' shaperegr(shapearray,indep,links=linksentire,group=group,colcca=as.numeric(group),pchcca=as.numeric(group))
+#' prov<-shaperegr(shapearray,indep,links=linksentire,group=group,heatmap=T,triang=triang)
+#' prov2<-shaperegr(shapearray,cbind(amy3d$size,rnorm(length(indep),0,1)),links=linksentire,group=group,heatmap=T,triang=triang)
 #' }
 #' @export
 shaperegr<-function(shapearray,indep,mag=1,frames=20,links=NULL,zlim=NULL,colcca=NULL,legend=T,pchcca=NULL,lwd=2,heatmap=F,triang=NULL,group=NULL,rampcolors=c("blue4","cyan2","yellow","red4"),alpha=0.7,from=NULL,to=NULL){
