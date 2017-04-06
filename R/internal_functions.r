@@ -4,6 +4,20 @@
 #' @author Paolo Piras
 #' @export  
 
+conslinks<-function(number,open=T){
+k=seq(1:(number-1))
+aw=NULL
+for(i in k){
+b=list(c(i,i+1))
+aw<-c(aw,b)
+}
+if(open==T){return(aw)}else{
+aw<-c(aw,list(c(1,number)))
+}
+aw
+}
+#' @export
+
 list2array<-function(mylist){
 require(abind)
 final<-NULL
