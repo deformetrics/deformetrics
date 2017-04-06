@@ -4,6 +4,17 @@
 #' @author Paolo Piras
 #' @export  
 
+list2array<-function(mylist){
+require(abind)
+final<-NULL
+for(i in 1:length(mylist)){
+temp<-array(mylist[[i]],dim=c(nrow(mylist[[i]]),ncol(mylist[[i]]),1))
+final<-abind::abind(final,temp)
+}
+return(final)
+}
+#' @export
+
 serpred<-function(dep,indep,polyn=1,length.out=10){
 sizes<-seq(min(indep),max(indep),length.out=length.out)
 sizesvetts<-NULL
