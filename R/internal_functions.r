@@ -4,6 +4,102 @@
 #' @author Paolo Piras
 #' @export  
 
+heat3d<-function(source,target,triang,iter=3,linkss=NULL,legend=T,cols=1,colt=2,plottarget=T,collinkss=1,lwds=2,collinkst=2,lwdt=2,cexs=0.5,cext=0.5,colors=c("blue4","cyan2","yellow","red4"),alpha=1,ngrid=0,mag=1,graphics=T,to=NULL,from=NULL,lines=T){
+  mate<-source
+  mate2<-target
+  mate2<-mate+(mate2-mate)*mag
+  library(fields)
+  tes<-tessell3d(triang,mate,iter)
+  class(tes) <- "mesh3d"
+  matr<-mate
+  M<-t(tes$vb)[,1:3][-c(1:nrow(matr)),]
+
+  tpsgrid<-tpsgridpaolo(mate,mate2,linksTT=linkss,linksYY=linkss,graphics=F,ngrid=22)
+  veclist<-NULL
+  for(j in 1:nrow(M)){
+    vecj<-NULL
+    for(i in 1:nrow(matr)){
+      vec1ji<--2*sqrt(abs(M[j,1]-matr[i,1]))
+      vec2ji<--2*sqrt(abs(M[j,2]-matr[i,2]))
+      vec3ji<--2*sqrt(abs(M[j,3]-matr[i,3]))
+      vecji<-c(vec1ji,vec2ji,vec3ji)
+      vecj<-rbind(vecj,vecji)
+    }
+    veclist<-c(veclist,list(vecj))
+  }
+  jac<-NULL
+  for(i in 1: length(veclist)){
+    jaci<-t(tpsgrid$B)+t(tpsgrid$W)%*%veclist[[i]]
+    jac<-c(jac,list(jaci))
+  }
+  
+  jac2<-list2array(jac)
+  mean11<-mean(jac2[1,1,])
+  mean12<-mean(jac2[1,2,])
+  mean13<-mean(jac2[1,3,])
+  mean21<-mean(jac2[2,1,])
+  mean22<-mean(jac2[2,2,])
+  mean23<-mean(jac2[2,3,])
+  mean31<-mean(jac2[3,1,])
+  mean32<-mean(jac2[3,2,])
+  mean33<-mean(jac2[3,3,])
+  detmean<-det(matrix(c(mean11,mean21,mean31,mean12,mean22,mean32,mean31,mean32,mean33),ncol=3))
+  myj<-unlist(lapply(jac,det))
+  obs<-log2(myj/detmean)
+  fit<- Tps(M, obs) 
+  obs2<-predict(fit,mate)
+  obs3<-c(obs2,obs)
+  
+  obs3[is.na(obs3)]<-mean(obs3,na.rm=T)
+  
+  obm<-meshDist(plotsurf(rbind(mate,M),tes$it,plot=F),distv=obs3,add=T,rampcolors =colors,to=to,from=from,plot=T)
+  rgl.close()
+  if(graphics==T){
+  deformGrid3d(mate,mate2,ngrid=ngrid,lines=lines,col1=cols,col2=colt)
+  shade3d(obm$colMesh)
+  if(!is.null(linkss)){lineplot(mate,linkss,col=collinkss,lwd=lwds)}
+  if(plotsource==T){
+  if(!is.null(linkss)){lineplot(mate2,linkss,col=collinkst,lwd=lwdt)}}
+  }
+
+  out<-list(mate=mate,mate2=mate2,centros=M,jacs=jac,detjac=myj,detmean=detmean,obs=obs,obs2=obs2,fit=fit,cols=makeTransparent(colorRampPalette(colors)(n = length(obs3)),alpha=alpha),tes=tes,obm=obm)
+  out
+}
+#' @export
+
+plotsurf<-function(lmatrix,triang,col=1,alpha=0.5,plot=T){
+thesurf_1=t(cbind(lmatrix,1))
+ triangolazioni=triang
+  thesurf=list(vb=thesurf_1,it=triangolazioni)
+  class(thesurf) <- "mesh3d"
+if(plot==T){shade3d(thesurf,col=col,alpha=alpha)}
+return(thesurf)
+}
+#' @export
+
+tessell3d=function(tri,ver,iter){
+tri_t=tri
+ver_t=ver
+for(j in 1:iter){
+nrows=nrow(tri_t)
+numb=range(tri_t)[2]
+for(i in 1:nrows){
+tri_i=ver_t[tri_t[i,],]
+cen_i=colMeans(tri_i) 
+tri_1=c(tri_t[i,c(1,2)],numb+i)
+tri_2=c(tri_t[i,1],numb+i,tri_t[i,3])
+tri_3=c(tri_t[i,c(2,3)],numb+i)
+tri_t=rbind(tri_t,tri_1,tri_2,tri_3)
+ver_t=rbind(ver_t,cen_i)
+}}
+vertici_out=cbind(ver_t,1)
+rownames(vertici_out)=NULL
+triangoli_out=tri_t[(dim(tri)[1]+1):dim(tri_t)[1],]
+rownames(triangoli_out)=NULL
+mesh.out=list(vb=t(vertici_out),it=t(triangoli_out))
+}
+#' @export
+
 plotdefo3d<-function(procsymobject,triang=NULL,links=NULL,collinks=1,lwd=1,axtit=NULL,mags=rep(1,3),heat=F,scaleramp=F,heateuc=F,sign=T,colors=c("blue4","cyan2","yellow","red4"),alpha=1,from=NULL,to=NULL,out=F,plot=T){
   if(is.null(axtit)==T){axtit=c("PC1+","PC2+","PC3+","PC1-","PC2-","PC3-")}else{axtit=axtit}
   texts<-axtit
@@ -721,7 +817,7 @@ heat2d<-function(init,fin,invc=F,constr=T,sen=F,logsen=T,nadd=5000,linkss=NULL,z
   mate<-fin
   mate2<-init
   
-  init<-fin+(init-fin)*mag
+fin<-init+(fin-init)*mag
   
   if(!is.null(linkss)&is.na(S)==T){S<-list2matrix(linkss)}
   
@@ -883,6 +979,11 @@ tpsgrid<-tpsgridpaolo(init,fin,linksTT=linkss,linksYY=linkss,axes2d=T,ext=ext,gr
   out<-list(mate=fin,mate2=init,centros=M,interpcoords=sr1,jacs=jac,detjac=myj,detmean=detmean,obs=obs,fit=fit,pred=pred,xlim=tpsgrid$grid$xlim,ylim=tpsgrid$grid$ylim,tol=tol,cols=makeTransparent(colorRampPalette(colors)(n = length(obs)),alpha=alpha),tpsgrid=tpsgrid,sumse=sum(sens2),pols=pols,pols2=pols2,areasipob=po)
   out
 }
+
+
+
+
+
 #' @export
 
 
