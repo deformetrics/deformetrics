@@ -101,7 +101,7 @@ plot(amy2d$PCscores[,1:2],asp=1)
 plotdefo(amy2d,linkss=linksdors,linkst=linksdors)
 orbitR<-centroids(amy2d$mshape[c(18,19,20,17,16,14,13,12,15),])
 orbitL<-centroids(amy2d$mshape[c(37,35,34,33,32,31,30,29,36),])
-plotdefo(amy2d,linkss=linksdors,linkst=linksdorsH=rbind(orbitR,orbitL),pholes=list(c(18,19,20,17,16,14,13,12,15),c(37,35,34,33,32,31,30,29,36)))
+plotdefo(amy2d,linkss=linksdors,linkst=linksdors,H=rbind(orbitR,orbitL),pholes=list(c(18,19,20,17,16,14,13,12,15),c(37,35,34,33,32,31,30,29,36)))
 }
 }
 \author{
