@@ -20,7 +20,7 @@ sublinks
 This function creates a new links file starting from a links file and a vector of lansmarks selection
 }
 \examples{
-\\ dont run{
+\dontrun{ 
 data(linksentire)
 data(pri3d)
 newlinks<-sublinks(linksentire,c(1:17))
