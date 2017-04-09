@@ -115,7 +115,7 @@ animdefo(amy2d$mshape,list(pc1seq,pc2seq,pc3seq,pc4seq),czlim=T,linkss=linksdors
 ##### Shape change associated to evolutionary allometry 
 regr<-shaperegr(amy2d$orpdata,amy2d$size,links=linksdors,heatmap=T) ### 
 myaxtits<-list(paste("Centroid Size=",round(regr$myseq,2)))###
-#### salva i frames dell'animazione
+#### 
 animdefo(amy2d$mshape,list(regr$seqshapes),czlim=F,czlimw=T,a=0.01,linkss=linksdors,linkst=linksdors,axtit=myaxtits,magrange=1.5)
 }
 }
