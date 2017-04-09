@@ -29,14 +29,12 @@
   }
   \author{
     Paolo Piras, Antonio Profico, Pasquale Raia, Valerio Varano, Luciano Teresi, Stefano Gabriele, Alessio Veneziano
-\tabular{3} 
+
 Maintainer: Paolo Piras \email{paolo.piras@uniroma3.it}
-\tabular{3}
+
 Maintainer: Antonio Profico \email{antonio.profico@uniroma1.it}    
   }
 
 
-\prova {inserisci qua testo
-  }
   
   
