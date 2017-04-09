@@ -1,6 +1,6 @@
 #' animdefo
 #'
-#' This function save images of  2D the deformations of a reference 2d shape relatively to  sequence(s) of shapes contained in "seqlist" argument; this can store from 1  to 4 sequences of shapes. Plots are saved in the working directory and can be combined in animated GIF using external softwares.  By default the titles of each plot are "PC1", "PC2", "PC3", "PC4" but any title can be set (see examples). Heatmap is computed by default.
+#' This function saves images of  2D the deformations of a reference 2d shape relatively to  sequence(s) of shapes contained in "seqlist" argument; this can store from 1  to 4 sequences of shapes. Plots are saved in the working directory and can be combined in animated GIF using external softwares.  By default the titles of each plot are "PC1", "PC2", "PC3", "PC4" but any title can be set (see examples). Heatmap is computed by default.
 #' @param mshape matrix: a kx2 matrix which is the reference matrix whose deformation is evaluated relatively to the shapes presented in "seqlist" argument. If links are provided the heatmap is computed in the constrained Delaunay triangulation defined by the links. Otherwise the Delaunay triangulation is not constrained.
 #' @param seqlist	list: a list with 1 to 4 elements each containing a sequence of shapes that are contrasted with the reference shape. If more than one sequence is provided the sequences must contain the same number of shapes. 
 #' @param suffix characther: suffix name to attch to the saved .png files (default = "anim")
