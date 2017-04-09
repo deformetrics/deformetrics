@@ -74,7 +74,7 @@
 #' }
 #' @export
 
-plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatmap=F,zlim=NULL,heatcolors=c("blue4","cyan2","yellow","red4"),triang1=NULL,triang2=NULL,alpha=1,S1=NA,S2=NA,from1=NULL,to1=NULL,from2=NULL,to2=NULL,rounds=0,sdx=1,sdy=1,labels=NULL,group=NULL,col=1,pch=19,colgroup=NULL,zlim2d=NULL){
+plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatmap=F,zlim=NULL,heatcolors=c("blue4","cyan2","yellow","red4"),scaleramp=F,triang1=NULL,triang2=NULL,alpha=1,S1=NA,S2=NA,from1=NULL,to1=NULL,from2=NULL,to2=NULL,rounds=0,sdx=1,sdy=1,labels=NULL,group=NULL,col=1,pch=19,colgroup=NULL,zlim2d=NULL){
   require(Morpho)
   require(shapes)
   
@@ -112,8 +112,8 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
         myhxneg<-heat2d(mshape1,plsnxneg,tol=10,nadd=5000,graphics=F,constr=T,colors=heatcolors,linkss=links1,S=S1,zlim=zlim) 
       }else{
         if(is.null(triang1)){stop("You cannot want heatmap in 3d without triangulation for block1")}
-        myhxpos<-diffonmesh(mshape1,plsnxpos,t(triang1),from=from1,to=to1,rampcolors=heatcolors,alphas=c(alpha,0.7),graph=F)
-        myhxneg<-diffonmesh(mshape1,plsnxneg,t(triang1),from=from1,to=to1,rampcolors=heatcolors,alphas=c(alpha,0.7),graph=F)
+        myhxpos<-diffonmesh(mshape1,plsnxpos,t(triang1),from=from1,to=to1,rampcolors=heatcolors,alphas=c(alpha,0.7),graph=F,scaleramp=scaleramp)
+        myhxneg<-diffonmesh(mshape1,plsnxneg,t(triang1),from=from1,to=to1,rampcolors=heatcolors,alphas=c(alpha,0.7),graph=F,scaleramp=scaleramp)
       }
     }
     
@@ -133,8 +133,8 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
         myhyneg<-heat2d(mshape2,plsnyneg,tol=10,nadd=5000,graphics=F,constr=T,colors=heatcolors,linkss=links2,S=S2) 
       }else{
         if(is.null(triang2)){stop("You cannot want heatmap in 3d without triangulation for block2")}
-        myhypos<-diffonmesh(mshape2,plsnypos,t(triang2),from=from2,to=to2,rampcolors=heatcolors,alphas=c(alpha,0.7),graph=F)
-        myhyneg<-diffonmesh(mshape2,plsnyneg,t(triang2),from=from2,to=to2,rampcolors=heatcolors,alphas=c(alpha,0.7),graph=F)
+        myhypos<-diffonmesh(mshape2,plsnypos,t(triang2),from=from2,to=to2,rampcolors=heatcolors,alphas=c(alpha,0.7),graph=F,scaleramp=scaleramp)
+        myhyneg<-diffonmesh(mshape2,plsnyneg,t(triang2),from=from2,to=to2,rampcolors=heatcolors,alphas=c(alpha,0.7),graph=F,scaleramp=scaleramp)
       }
     }
     
@@ -538,3 +538,5 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
   if(length(out)>3){names(out)=c("pls","allxscores","allyscores","xscoresmeans","yscoresmeans")}else{NULL}
   return(out)
 }
+
+
