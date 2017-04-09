@@ -5,7 +5,7 @@
 #' @return res list: A list with new links
 #' @author Paolo Piras
 #' @examples 
-#' \ dont run{
+#' \dontrun{
 #' data(linksentire)
 #' data(pri3d)
 #' newlinks<-sublinks(linksentire,c(1:17))
