@@ -7,30 +7,35 @@
 \alias{deformetrics}
 \title{An R package providing statistical methods related to Geometric Morphometrics}
 \description{
-An R package providing statistical methods related to Geometric Morphometrics
+  An R package providing statistical methods related to Geometric Morphometrics
 }
 \details{
-\tabular{ll}{
-Package: \tab deformetrics\cr
-Type: \tab Package\cr
-Version: \tab 0.9\cr
-Date: \tab 2017-03-26\cr
-License: \tab GPL2\cr
-LazyLoad: \tab yes\cr
-}
+  \tabular{ll}{
+    Package: \tab deformetrics\cr
+    Type: \tab Package\cr
+    Version: \tab 0.9\cr
+    Date: \tab 2017-03-26\cr
+    License: \tab GPL2\cr
+    LazyLoad: \tab yes\cr
+  }
 }
 \note{
-For the most advanced version of this package: \url{https://github.com/deformetrics/deformetrics} 
-            
-\references{
-Piras et al. 2017. Title.Journal,
-\url{http://www.percorso.com/volltexte/9181/}.
-}
-\author{
-Paolo Piras, Antonio Profico, Pasquale Raia, Valerio Varano, Luciano Teresi, Stefano Gabriele, Alessio Veneziano
-            
-            
-Maintainer: Paolo Piras \email{paolo.piras@uniroma3.it}
-            Profico Antonio \email{antonio.profico@uniroma1.it}
+  For the most advanced version of this package: \url{https://github.com/deformetrics/deformetrics} 
 }
 
+  \references{
+    Piras et al. 2017. Title.Journal,
+    \url{http://www.percorso.com/volltexte/9181/}.
+  }
+  \author{
+    Paolo Piras, Antonio Profico, Pasquale Raia, Valerio Varano, Luciano Teresi, Stefano Gabriele, Alessio Veneziano
+  }
+    
+  \Maintainer { Paolo Piras \email{paolo.piras@uniroma3.it}
+    Profico Antonio \email{antonio.profico@uniroma1.it}
+  }
+
+\prova {inserisci qua testo
+  }
+  
+  
