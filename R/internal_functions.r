@@ -3,6 +3,116 @@
 #' Here are reported a collection of internal functions
 #' @author Paolo Piras
 #' @export  
+
+
+
+plot2dhull<-function(matrix,group,scalevariable=1,asp=1,extl=F,legend=T,xl=NULL,yl=NULL,posl=c("topright"),labels=NULL,clabel=0,pch=19,lwd=0.5,colhull=NULL,col=as.numeric(group),xlab=NULL,ylab=NULL,grey=F,xlimi=range(matrix[,1])*1.3,ylimi=range(matrix[,2])*1.3,reorder=T,alpha=rep(0,nlevels(group))){
+  library(MASS)
+  library(compositions)
+  library(spatstat)
+  library(gdata)
+  library(TeachingDemos)
+  library(ade4)
+  library(calibrate)
+  if (!is.factor(group)) stop("'group' must be a factor")
+  
+  
+  
+  makeTransparent = function(..., alpha=0.5) {
+    
+    if(alpha<0 | alpha>1) stop("alpha must be between 0 and 1")
+    
+    alpha = floor(255*alpha)  
+    newColor = col2rgb(col=unlist(list(...)), alpha=FALSE)
+    
+    .makeTransparent = function(col, alpha) {
+      rgb(red=col[1], green=col[2], blue=col[3], alpha=alpha, maxColorValue=255)
+    }
+    
+    newColor = apply(newColor, 2, .makeTransparent, alpha=alpha)
+    
+    return(newColor)
+    
+  }
+  
+  x<-matrix[,1]
+  y<-matrix[,2]
+  
+  if(reorder==T){group<-factor(group,levels=unique(group))}
+  
+  
+  
+  species<-as.numeric(group)
+  
+  col=col
+  if(grey==T){col=col2grey(col)}
+  
+  
+  
+  coli<-data.frame(group,as.numeric(group),col,pch)
+  if(is.null(colhull)){colhull=aggregate(coli[,-1],by=list(coli[,1]),mean)[,-3][,2]}else{colhull=colhull}
+  
+  colim<-cbind(aggregate(coli[,-1],by=list(coli[,1]),mean)[,-c(3,4)],colhull)
+  
+  
+  
+  
+  
+  plot(x,y,type="p",cex=scalevariable,col=as.character(coli[,3]),pch=pch,xlim=xlimi,ylim=ylimi,xlab=xlab,ylab=ylab,asp=asp)
+  
+  
+  
+  if(!is.null(labels)){textxy(x,y,labels)}else{NULL}
+  for(i in 1:(max(species)))
+  {
+    abline(h=0,v=0)
+    if(length(x[species==i])<3){NULL}else{
+      hulli<-convexhull.xy(subset(cbind(x,y),species==i))
+      par(new=T)
+      plot(hulli,col=makeTransparent(colim[,3][i], 1,alpha=alpha[i]),lwd=lwd,lty=i,add=T,asp=asp)
+      par(new=T)
+      daplotx<-c(hulli$bdry[[1]][[1]][length(hulli$bdry[[1]][[1]])],hulli$bdry[[1]][[1]])
+      daploty<-c(hulli$bdry[[1]][[2]][length(hulli$bdry[[1]][[2]])],hulli$bdry[[1]][[2]])
+      par(new=T)
+      plot(daplotx,daploty,lwd=lwd,type="l",lty=i,col=colim[,3][i],xlim=xlimi,ylim=ylimi,axes=F,xlab="",ylab="",asp=asp)
+      
+    }
+  }
+  
+  
+  
+  opar <- par(mar = par("mar"))
+  par(mar = c(0.1, 0.1, 0.1, 0.1))
+  on.exit(par(opar))
+  
+  
+  meansx<-aggregate(matrix[,1],by=list(group),FUN=mean)
+  meansy<-aggregate(matrix[,2],by=list(group),FUN=mean)
+  
+  
+  if (clabel > 0) 
+    for(i in 1:nlevels(group)){ scatterutil.eti(meansx[i,-1],meansy[i,-1], meansx[,1][i], clabel,coul=1)}
+  
+  
+  if(legend==T){
+    if(extl==T){
+      x11()
+      plot(x,y,col="white")
+      
+      legend(min(x),max(y),unique(coli[,1]), cex=1, col=unique(coli[,3]), pch=unique(coli[,4]),box.col="white")
+      
+    }else{
+    if(is.null(xl)==T&is.null(yl)==T){
+      
+      legend(posl,legend=unique(coli[,1]), col=unique(coli[,3]), pch=unique(coli[,4]),bty='n')}else{
+        
+        legend(xl,yl,unique(coli[,1]),col=unique(coli[,3]),pch=unique(coli[,4]),bty='n')}
+    
+  }
+  }
+}
+#' export
+
 ptau6<-function(array,factor,CSinit=T,sepure=F,polyn=1,CR=NULL,locs=NULL,perm=999){
   library(Morpho)
   library(shapes)
