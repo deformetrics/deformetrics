@@ -3,8 +3,788 @@
 #' Here are reported a collection of internal functions
 #' @author Paolo Piras
 #' @export  
+ptau6<-function(array,factor,CSinit=T,sepure=F,polyn=1,CR=NULL,locs=NULL,perm=999){
+  library(Morpho)
+  library(shapes)
+  library(vegan)
+  warning("WARNING: this function reorders data (if they are not) in increasing size order within each level")
+  k<-dim(array)[1]
+  m<-dim(array)[2]
+  n<-dim(array)[3]
+  
+  newarray<-array[,,order(factor,centroid.size(array))]
+  
+  factor<-factor[order(factor)]
+  
+  
+  cbind(dimnames(newarray)[[3]],as.character(factor))
+  
+  depepure<-array2mat(procSym(newarray,pcAlign=F,CSinit=CSinit,scale=F)$orpdata,n,k*m)
+  if(sepure==T){depepure<-array2mat(sepgpa(newarray,factor,CSinit=CSinit,scale=F)$mountedorpdata,n,k*m)}
+  indepepure<-centroid.size(newarray)
+  print("Individual multivariate (linear) regression between shape and size" )
+  print(manymultgr(depepure,indepepure,factor,steps=perm))
+  print("Pairwise *linear* mancova p-values on original data") 
+  print(pwpermancova(depepure,indepepure,factor,nperm=perm)$p_adonis_pred1_pred2)
+  thedatapure<-data.frame(indepure=indepepure,depure=depepure)
+  thelmlistpure<-NULL
+  mypredictpure<-NULL
+  myresidpure<-NULL
+  for(i in 1:nlevels(factor)){
+    thelmpurei<-lm(as.matrix(thedatapure[,-1][as.numeric(factor)==i,])~poly(indepure[as.numeric(factor)==i],degree=polyn,raw=TRUE),data=thedatapure)
+    mypredictpurei<-predict(thelmpurei)
+    myresidpurei<-resid(thelmpurei)
+    thelmlistpure<-c(thelmlistpure,list(thelmpurei))
+    mypredictpure<-rbind(mypredictpure,mypredictpurei)
+    myresidpure<-rbind(myresidpure,myresidpurei)
+  }
+  
+  mypredictpure<-read.inn(mypredictpure,k,m)
+  myresidpure<-read.inn(myresidpure,k,m)
+  
 
-heat3d<-function(source,target,triang,iter=3,linkss=NULL,legend=T,cols=1,colt=2,plottarget=T,collinkss=1,lwds=2,collinkst=2,lwdt=2,cexs=0.5,cext=0.5,colors=c("blue4","cyan2","yellow","red4"),alpha=1,ngrid=0,mag=1,graphics=T,to=NULL,from=NULL,lines=T){
+if(is.null(CR)==T){CR<-procSym(mypredictpure[,,firstsfac(factor)],scale=F,pcAlign=F,reflect=F,CSinit=F)$mshape}else{CR<-CR}
+if(is.null(locs)==T){locs<-mypredictpure[,,firstsfac(factor)]}else{locs<-locs}
+
+  prls<-lshift2(mypredictpure,factor,CSinit=CSinit,CR=CR,locs=locs)
+  
+  common<-array2mat(procSym(newarray,pcAlign=,scale=F,CSinit=CSinit)$orpdata,n,k*m)
+  print("Pairwise multivariate (linear) regression between shape and size" )
+  print(pwpermancova(common,indepepure,factor,nperm=perm)$p_adonis_pred1_pred2)
+  space1<-prcomp(array2mat(prls$transported,n,k*m))
+  space1mshape<-procSym(prls$transported,pcAlign=F)$mshape
+  origtrasp<-prls$transported+myresidpure
+  
+  origproj<-predict(space1,array2mat(origtrasp,n,k*m))
+  print("Pairwise multivariate (linear) regression between shape of transported data and size" )
+  print(pwpermancova(array2mat(origtrasp,n,k*m),indepepure,factor,nperm=perm)$p_adonis_pred1_pred2)
+  depepure2<-origtrasp
+  
+  print("Individual multivariate (linear) regression between shape of transported data and size" )
+  print(manymultgr(array2mat(depepure2,n,k*m),indepepure,factor,steps=perm))
+  
+  thedatapure2<-data.frame(indepure2=indepepure,depure2=array2mat(depepure2,n,k*m))
+  thelmlistpure2<-NULL
+  mypredictpure2<-NULL
+  myresidpure2<-NULL
+  for(i in 1:nlevels(factor)){
+    thelmpure2i<-lm(as.matrix(thedatapure2[,-1][as.numeric(factor)==i,])~poly(indepure2[as.numeric(factor)==i],degree=polyn,raw=TRUE),data=thedatapure2)
+    mypredictpure2i<-predict(thelmpure2i)
+    myresidpure2i<-resid(thelmpure2i)
+    thelmlistpure2<-c(thelmlistpure2,list(thelmpure2i))
+    mypredictpure2<-rbind(mypredictpure2,mypredictpure2i)
+    myresidpure2<-rbind(myresidpure2,myresidpure2i)
+  }
+  
+  
+  out<-list(k=k,m=m,n=n,arrayord=newarray,factorord=factor,CR=CR,locs=locs,depepure=depepure,indepepure=indepepure,thelmlistpure=thelmlistpure,predictpure=mypredictpure,residpure=myresidpure,shifted=array2mat(prls$transported,n,k*m),thelmlistpure2=thelmlistpure2,predictpure2=array2mat(prls$transported,n,k*m),predictpure3=mypredictpure2,residpure2=myresidpure2,space1=space1,origtrasp=array2mat(origtrasp,n,k*m),origproj=origproj,space1mshape=space1mshape)                                   
+}
+#' export
+
+
+plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatmap=F,heatcolors=c("blue4","cyan2","yellow","red4"),triang1=NULL,triang2=NULL,alpha=1,S1=NA,S2=NA,from1=NULL,to1=NULL,from2=NULL,to2=NULL,rounds=0,sdx=1,sdy=1,labels=NULL,group=NULL,col=1,pch=19,colgroup=NULL,zlim2d=NULL){
+  require(Morpho)
+  require(shapes)
+  
+  thepls<-pls2B(block1,block2,rounds=rounds)
+  XScores<-thepls$Xscores
+  YScores<-thepls$Yscores
+  plot(XScores[, plsn],YScores[,plsn],asp=1,col=col,pch=pch)
+  if(!is.null(labels)){textxy(XScores[, plsn],YScores[, plsn],labels)}
+  
+  if(!is.null(group)){plot2dhull(cbind(XScores[, plsn],YScores[, plsn]),group,1,pch=pch,col=col,colhull=colgroup,labels=labels)}else{NULL}
+  
+  if(!is.null(group)){
+    xscoresmeans<-as.matrix(aggregate(XScores,by=list(group),mean)[,-1])
+    rownames(xscoresmeans)<-aggregate(XScores,by=list(group),mean)[,1]
+    yscoresmeans<-as.matrix(aggregate(YScores,by=list(group),mean)[,-1])
+    rownames(yscoresmeans)<-aggregate(YScores,by=list(group),mean)[,1]
+    x11()
+    plot(xscoresmeans[,plsn],yscoresmeans[,plsn])
+    textxy(xscoresmeans[,plsn],yscoresmeans[,plsn],rownames(xscoresmeans))
+  }else{NULL}
+  
+  if(!is.null(links1)&is.na(S1)==T){S1<-list2matrix(links1)}
+  if(!is.null(links2)&is.na(S2)==T){S2<-list2matrix(links2)}
+  
+  theshapes<-plsCoVar(thepls,plsn,sdx=sdx,sdy=sdy)
+  if(is.matrix(block1)==F){
+    plsnxpos<-theshapes$x[,,2]
+    plsnxneg<-theshapes$x[,,1]
+    css1<-c(cSize(plsnxpos),cSize(plsnxneg))
+    mshape1<-arrMean3(block1)
+    if(heatmap==T){
+      if(dim(plsnxpos)[2]<3){
+        if(!is.null(links1)){S1<-list2matrix(links1)}
+        myhxpos<-heat2d(mshape1,plsnxpos,tol=10,nadd=5000,graphics=F,constr=T,colors=heatcolors,linkss=links1,S=S1,zlim=zlim) 
+        myhxneg<-heat2d(mshape1,plsnxneg,tol=10,nadd=5000,graphics=F,constr=T,colors=heatcolors,linkss=links1,S=S1,zlim=zlim) 
+      }else{
+        if(is.null(triang1)){stop("You cannot want heatmap in 3d without triangulation for block1")}
+        myhxpos<-diffonmesh(mshape1,plsnxpos,t(triang1),from=from1,to=to1,rampcolors=heatcolors,alphas=c(alpha,0.7),graph=F)
+        myhxneg<-diffonmesh(mshape1,plsnxneg,t(triang1),from=from1,to=to1,rampcolors=heatcolors,alphas=c(alpha,0.7),graph=F)
+      }
+    }
+    
+    
+  }else{NULL}
+  
+  
+  if(is.matrix(block2)==F){
+    plsnypos<-theshapes$y[,,2]
+    plsnyneg<-theshapes$y[,,1]
+    css2<-c(cSize(plsnypos),cSize(plsnyneg))
+    mshape2<-arrMean3(block2)
+    if(heatmap==T){
+      if(dim(plsnypos)[2]<3){
+        if(!is.null(links2)){S2<-list2matrix(links2)}
+        myhypos<-heat2d(mshape2,plsnypos,tol=10,nadd=5000,graphics=F,constr=T,colors=heatcolors,linkss=links2,S=S2) 
+        myhyneg<-heat2d(mshape2,plsnyneg,tol=10,nadd=5000,graphics=F,constr=T,colors=heatcolors,linkss=links2,S=S2) 
+      }else{
+        if(is.null(triang2)){stop("You cannot want heatmap in 3d without triangulation for block2")}
+        myhypos<-diffonmesh(mshape2,plsnypos,t(triang2),from=from2,to=to2,rampcolors=heatcolors,alphas=c(alpha,0.7),graph=F)
+        myhyneg<-diffonmesh(mshape2,plsnyneg,t(triang2),from=from2,to=to2,rampcolors=heatcolors,alphas=c(alpha,0.7),graph=F)
+      }
+    }
+    
+  }else{NULL}
+  
+  ###### forma matrice 
+  if(length(dim(block1))>2&length(dim(block2))<3){
+    if(css1[1]<css1[2]){themax=plsnxneg}
+    if(css1[1]>css1[2]){themax=plsnxpos}
+    if(css1[1]==css1[2]){themax=plsnxpos}
+    if(dim(block1)[2]>2){
+      open3d(windowRect=c(100,100,1000,1000)) 
+      mat <- matrix(1:4, ncol=2)
+      layout3d(mat, height = rep(c(2,1), 2), model = "inherit")
+      plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+      if(heatmap==T){
+        shade3d(myhxpos$obm$colMesh,alpha=alpha)
+        if(is.null(links1)==F){lineplot(plsnxpos,links1,col=1)}
+      }else{
+        plot3d(plsnxpos,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+        if(is.null(links1)==F){lineplot(plsnxpos,links1,col=1)}}
+      next3d()
+      text3d(0,0,0, "Block1 positive")
+      next3d()
+      plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+      if(heatmap==T){
+        shade3d(myhxneg$obm$colMesh,alpha=alpha)
+        if(is.null(links1)==F){lineplot(plsnxneg,links1,col=1)}
+      }else{
+        plot3d(plsnxneg,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+        if(is.null(links1)==F){lineplot(plsnxneg,links1,col=1)}}
+      next3d()
+      text3d(0,0,0, "Block1 negative")
+    }
+    if(dim(block1)[2]<3){
+      par(mfrow=c(1,2))
+      if(heatmap==T){
+        image.plot(xyz2img(cbind(myhxpos$interpcoords,myhxpos$pred),tolerance=myhxpos$tol),asp=1,xlim=range(themax[,1]),ylim=range(themax[,2]),col=myhxpos$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="")  
+        par(new=T)
+        plot(myhxpos$mate,xlim=range(themax[,1]),ylim=range(themax[,2]),asp=1,pch=19,cex=1,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+        if(is.null(links1)==F){lineplot(myhxpos$mate,links1)}
+        lines(myhxpos$tpsgrid$grid$ngrid,xlim=range(themax[,1]),ylim=range(themax[,2]))
+        lines(myhxpos$tpsgrid$grid$ngrid2,xlim=range(themax[,1]),ylim=range(themax[,2]))
+        par(new=T)
+        plot(myhxpos$mate2,xlim=range(themax[,1]),ylim=range(themax[,2]),asp=1,pch=19,cex=0.5,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+        if(is.null(links1)==F){lineplot(myhxpos$mate2,links1,col=2,lwd=1)}
+        title("Block1 positive")
+        image.plot(xyz2img(cbind(myhxneg$interpcoords,myhxneg$pred),tolerance=myhxneg$tol),asp=1,xlim=range(themax[,1]),ylim=range(themax[,2]),col=myhxneg$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="")  
+        par(new=T)
+        plot(myhxneg$mate,xlim=range(themax[,1]),ylim=range(themax[,2]),asp=1,pch=19,cex=0.5,col=2,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+        if(is.null(links1)==F){lineplot(myhxneg$mate,links1)}
+        lines(myhxneg$tpsgrid$grid$ngrid,xlim=range(themax[,1]),ylim=range(themax[,2]))
+        lines(myhxneg$tpsgrid$grid$ngrid2,xlim=range(themax[,1]),ylim=range(themax[,2]))
+        par(new=T)
+        plot(myhxneg$mate2,xlim=range(themax[,1]),ylim=range(themax[,2]),asp=1,pch=19,cex=1,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+        if(is.null(links1)==F){lineplot(myhxneg$mate2,links1,col=2,lwd=1)}
+        title("Block1 negative")
+        
+      }else{
+        plotmyarrays(plsnxpos,pch=19,links=links1,txt=F,xlim=range(themax[,1]),ylim=range(themax[,2]))
+        title("Block1 positive")
+        plotmyarrays(plsnxneg,pch=19,links=links1,txt=F,xlim=range(themax[,1]),ylim=range(themax[,2]))
+        title("Block1 negative")
+      }
+    }
+  }
+  #########  matrice forma  
+  if(length(dim(block1))<3&length(dim(block2))>2){
+    if(css2[1]<css2[2]){themax=plsnyneg}
+    if(css2[1]>css2[2]){themax=plsnypos}
+    if(css2[1]==css2[2]){themax=plsnypos}
+    if(dim(block2)[2]>2){
+      open3d(windowRect=c(100,100,1000,1000)) 
+      mat <- matrix(1:4, ncol=2)
+      layout3d(mat, height = rep(c(2,1), 2), model = "inherit")
+      plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+      if(heatmap==T){
+        shade3d(myhypos$obm$colMesh,alpha=alpha)
+        if(is.null(links2)==F){lineplot(plsnypos,links2,col=1)}
+      }else{
+        plot3d(plsnypos,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+        if(is.null(links2)==F){lineplot(plsnypos,links2,col=1)}}
+      next3d()
+      text3d(0,0,0, "Block2 positive")
+      next3d()
+      plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+      if(heatmap==T){
+        shade3d(myhyneg$obm$colMesh,alpha=alpha)
+        if(is.null(links2)==F){lineplot(plsnyneg,links2,col=1)}
+      }else{
+        plot3d(plsnyneg,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+        if(is.null(links2)==F){lineplot(plsnypos,links2,col=1)}}
+      next3d()
+      text3d(0,0,0, "Block2 negative")
+    }
+    if(dim(block2)[2]<3){
+      par(mfrow=c(1,2))
+      if(heatmap==T){
+        image.plot(xyz2img(cbind(myhypos$interpcoords,myhypos$pred),tolerance=myhypos$tol),asp=1,xlim=range(themax[,1]),ylim=range(themax[,2]),col=myhypos$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="")  
+        par(new=T)
+        plot(myhypos$mate,xlim=range(themax[,1]),ylim=range(themax[,2]),asp=1,pch=19,cex=1,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+        if(is.null(links2)==F){lineplot(myhypos$mate,links2)}
+        lines(myhypos$tpsgrid$grid$ngrid,xlim=range(themax[,1]),ylim=range(themax[,2]))
+        lines(myhypos$tpsgrid$grid$ngrid2,xlim=range(themax[,1]),ylim=range(themax[,2]))
+        par(new=T)
+        plot(myhypos$mate2,xlim=range(themax[,1]),ylim=range(themax[,2]),asp=1,pch=19,cex=0.5,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+        if(is.null(links2)==F){lineplot(myhypos$mate2,links2,col=2,lwd=2)}
+        title("Block2 positive")
+        image.plot(xyz2img(cbind(myhyneg$interpcoords,myhyneg$pred),tolerance=myhyneg$tol),asp=1,xlim=range(themax[,1]),ylim=range(themax[,2]),col=myhyneg$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="")  
+        par(new=T)
+        plot(myhyneg$mate,xlim=range(themax[,1]),ylim=range(themax[,2]),asp=1,pch=19,cex=0.5,col=2,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+        if(is.null(links2)==F){lineplot(myhyneg$mate,links2)}
+        lines(myhyneg$tpsgrid$grid$ngrid,xlim=range(themax[,1]),ylim=range(themax[,2]))
+        lines(myhyneg$tpsgrid$grid$ngrid2,xlim=range(themax[,1]),ylim=range(themax[,2]))
+        par(new=T)
+        plot(myhyneg$mate2,xlim=range(themax[,1]),ylim=range(themax[,2]),asp=1,pch=19,cex=1,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+        if(is.null(links2)==F){lineplot(myhyneg$mate2,links2,col=2,lwd=2)}
+        title("Block2 negative")
+        
+      }else{
+        plotmyarrays(plsnypos,pch=19,links=links2,txt=F,xlim=range(themax[,1]),ylim=range(themax[,2]))
+        title("Block2 positive")
+        plotmyarrays(plsnyneg,pch=19,links=links2,txt=F,xlim=range(themax[,1]),ylim=range(themax[,2]))
+        title("Block2 negative")}
+    }
+  }
+  ########  forma forma
+  if(length(dim(block1))>2&length(dim(block2))>2){
+    if(dim(block1)[2]>2&dim(block2)[2]>2){
+      allcss<-c(css1,css2)
+      themax<-list(plsnxpos,plsnxneg,plsnypos,plsnyneg)[which.max(allcss)][[1]]
+      themaxx<-list(plsnxpos,plsnxneg)[which.max(css1)][[1]]
+      themaxy<-list(plsnypos,plsnyneg)[which.max(css2)][[1]]
+      open3d(windowRect=c(100,100,1000,1000)) 
+      mat <- matrix(1:8, ncol=2)
+      layout3d(mat, height = rep(c(2,1), 2), model = "inherit")
+      
+      if(commonref==T){plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)}else{
+        plot3d(themaxx*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+      }
+      
+      if(heatmap==T){
+        shade3d(myhxpos$obm$colMesh,alpha=alpha)
+        if(is.null(links1)==F){lineplot(plsnxpos,links1,col=1)}
+      }else{
+        
+        plot3d(plsnxpos,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+        if(is.null(links1)==F){lineplot(plsnxpos,links1,col=1)}}
+      next3d()
+      text3d(0,0,0, "Block1 positive")
+      next3d()
+      if(commonref==T){plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)}else{
+        plot3d(themaxx*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+      }
+      if(heatmap==T){
+        shade3d(myhxneg$obm$colMesh,alpha=alpha)
+        if(is.null(links1)==F){lineplot(plsnxneg,links1,col=1)}
+      }else{
+        plot3d(plsnxneg,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+        if(is.null(links1)==F){lineplot(plsnxneg,links1,col=1)}}
+      next3d()
+      text3d(0,0,0, "Block1 negative")
+      next3d()
+      if(commonref==T){plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)}else{
+        plot3d(themaxy*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+      }
+      if(heatmap==T){
+        shade3d(myhypos$obm$colMesh,alpha=alpha)
+        if(is.null(links2)==F){lineplot(plsnypos,links2,col=1)}
+      }else{
+        plot3d(plsnypos,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+        if(is.null(links2)==F){lineplot(plsnypos,links2,col=1)}}
+      next3d()
+      text3d(0,0,0, "Block2 positive")
+      next3d()
+      if(commonref==T){plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)}else{
+        plot3d(themaxy*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+      }
+      if(heatmap==T){
+        shade3d(myhyneg$obm$colMesh,alpha=alpha)
+        if(is.null(links2)==F){lineplot(plsnyneg,links2,col=1)}
+      }else{
+        plot3d(plsnyneg,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+        if(is.null(links2)==F){lineplot(plsnyneg,links2,col=1)}}
+      next3d()
+      text3d(0,0,0, "Block2 negative")
+    }
+    
+    if(dim(block1)[2]>2&dim(block2)[2]<3){
+      open3d(windowRect=c(100,100,1000,1000))
+      themaxx<-list(plsnxpos,plsnxneg)[which.max(css1)][[1]]
+      themaxy<-list(plsnypos,plsnyneg)[which.max(css2)][[1]]
+      mat <- matrix(1:8, ncol=2)
+      layout3d(mat, height = rep(c(2,1), 2), model = "inherit")
+      plot3d(themaxx*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+      if(heatmap==T){
+        shade3d(myhxpos$obm$colMesh,alpha=alpha)
+        if(is.null(links1)==F){lineplot(plsnxpos,links1,col=1)}
+      }else{
+        plot3d(plsnxpos,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+        if(is.null(links1)==F){lineplot(plsnxpos,links1,col=1)}}
+      next3d()
+      text3d(0,0,0, "Block1 positive")
+      next3d()
+      plot3d(themaxx*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+      if(heatmap==T){
+        shade3d(myhxneg$obm$colMesh,alpha=alpha)
+        if(is.null(links1)==F){lineplot(plsnxneg,links1,col=1)}
+      }else{
+        plot3d(plsnxneg,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+        if(is.null(links1)==F){lineplot(plsnxneg,links1,col=1)}}
+      next3d()
+      text3d(0,0,0, "Block1 negative")
+      if(heatmap==T){
+        png(file = "myplot.png", bg = "transparent",width = 780, height = 780)
+        image.plot(xyz2img(cbind(myhypos$interpcoords,myhypos$pred),tolerance=myhypos$tol),asp=1,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]),col=myhypos$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+        par(new=T)
+        plot(myhypos$mate,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]),asp=1,pch=19,cex=1,xaxt="n",yaxt="n",bty="n",xlab="",ylab="",main="Block2 positive")
+        if(is.null(links2)==F){lineplot(myhypos$mate,links2)}
+        lines(myhypos$tpsgrid$grid$ngrid,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]))
+        lines(myhypos$tpsgrid$grid$ngrid2,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]))
+        par(new=T)
+        plot(myhypos$mate2,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]),asp=1,pch=19,cex=0.5,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+        if(is.null(links2)==F){lineplot(myhypos$mate2,links2,col=2,lwd=2)}
+        dev.off()
+        show2d(filename="myplot.png",ignoreExtent = F)
+        next3d()
+        text3d(0,0,0, "Block2 positive")
+        next3d()
+        png(file = "myplot.png", bg = "transparent",width = 780, height = 780)
+        image.plot(xyz2img(cbind(myhyneg$interpcoords,myhyneg$pred),tolerance=myhyneg$tol),asp=1,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]),col=myhyneg$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+        par(new=T)
+        plot(myhyneg$mate,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]),asp=1,pch=19,cex=1,xaxt="n",yaxt="n",bty="n",xlab="",ylab="",main="Block2 negative")
+        if(is.null(links2)==F){lineplot(myhyneg$mate,links2)}
+        lines(myhyneg$tpsgrid$grid$ngrid,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]))
+        lines(myhyneg$tpsgrid$grid$ngrid2,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]))
+        par(new=T)
+        plot(myhyneg$mate2,xlim=range(themax[,1]),ylim=range(themaxy[,2]),asp=1,pch=19,cex=0.5,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+        if(is.null(links2)==F){lineplot(myhyneg$mate2,links2,col=2,lwd=2)}
+        dev.off()
+        show2d(filename="myplot.png",ignoreExtent = F)
+        next3d()
+        text3d(0,0,0, "Block2 negative")
+      }else{
+        next3d()
+        plot3d(cbind(themaxy,0)*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+        plot3d(cbind(plsnypos,0),bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+        if(is.null(links2)==F){lineplot(cbind(plsnypos,0),links2,col=1)}
+        next3d()
+        text3d(0,0,0, "Block2 positive")
+        next3d()
+        plot3d(cbind(themaxy,0)*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+        plot3d(cbind(plsnyneg,0),bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+        if(is.null(links2)==F){lineplot(cbind(plsnyneg,0),links2,col=1)}
+        next3d()
+        text3d(0,0,0, "Block2 negative")}
+    } 
+    
+    if(dim(block1)[2]<3&dim(block2)[2]>2){
+      open3d(windowRect=c(100,100,1000,1000)) 
+      
+      themaxx<-list(plsnxpos,plsnxneg)[which.max(css1)][[1]]
+      themaxy<-list(plsnypos,plsnyneg)[which.max(css2)][[1]]
+      
+      mat <- matrix(1:8, ncol=2)
+      layout3d(mat, height = rep(c(2,1), 2), model = "inherit")
+      if(heatmap==T){
+        png(file = "myplot.png", bg = "transparent",width = 780, height = 780)
+        image.plot(xyz2img(cbind(myhxpos$interpcoords,myhxpos$pred),tolerance=myhxpos$tol),asp=1,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]),col=myhypos$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+        par(new=T)
+        plot(myhxpos$mate,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]),asp=1,pch=19,cex=1,xaxt="n",yaxt="n",bty="n",xlab="",ylab="",main="Block1 positive")
+        if(is.null(links1)==F){lineplot(myhxpos$mate,links1)}
+        lines(myhxpos$tpsgrid$grid$ngrid,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]))
+        lines(myhxpos$tpsgrid$grid$ngrid2,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]))
+        par(new=T)
+        plot(myhxpos$mate2,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]),asp=1,pch=19,cex=0.5,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+        if(is.null(links1)==F){lineplot(myhxpos$mate2,links1,col=2,lwd=2)}
+        dev.off()
+        show2d(filename="myplot.png",ignoreExtent = F)
+        next3d()
+        text3d(0,0,0, "Block1 positive")
+        next3d()
+        png(file = "myplot.png", bg = "transparent",width = 780, height = 780)
+        image.plot(xyz2img(cbind(myhxneg$interpcoords,myhxneg$pred),tolerance=myhxneg$tol),asp=1,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]),col=myhxneg$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+        par(new=T)
+        plot(myhxneg$mate,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]),asp=1,pch=19,cex=1,xaxt="n",yaxt="n",bty="n",xlab="",ylab="",main="Block1 negative")
+        if(is.null(links1)==F){lineplot(myhxneg$mate,links1)}
+        lines(myhxneg$tpsgrid$grid$ngrid,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]))
+        lines(myhxneg$tpsgrid$grid$ngrid2,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]))
+        par(new=T)
+        plot(myhxneg$mate2,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]),asp=1,pch=19,cex=0.5,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+        if(is.null(links1)==F){lineplot(myhxneg$mate2,links1,col=2,lwd=2)}
+        dev.off()
+        show2d(filename="myplot.png",ignoreExtent = F)
+        next3d()
+        text3d(0,0,0, "Block1 negative")
+      }else{
+        plot3d(cbind(themaxx,0)*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+        plot3d(cbind(plsnxpos,0),bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+        if(is.null(links1)==F){lineplot(cbind(plsnxpos,0),links1,col=1)}
+        next3d()
+        text3d(0,0,0, "Block1 positive")
+        next3d()
+        plot3d(cbind(themaxx,0)*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+        plot3d(cbind(plsnxneg,0),bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+        if(is.null(links2)==F){lineplot(cbind(plsnxneg,0),links1,col=1)}
+        next3d()
+        text3d(0,0,0, "Block1 negative")}
+      next3d()
+      plot3d(themaxy*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+      if(heatmap==T){
+        shade3d(myhypos$obm$colMesh,alpha=alpha)
+        if(is.null(links2)==F){lineplot(plsnypos,links2,col=1)}
+      }else{
+        plot3d(plsnypos,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+        if(is.null(links2)==F){lineplot(plsnypos,links2,col=1)}}
+      next3d()
+      text3d(0,0,0, "Block2 positive")
+      next3d()
+      plot3d(themaxy*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
+      if(heatmap==T){
+        shade3d(myhyneg$obm$colMesh,alpha=alpha)
+        if(is.null(links2)==F){lineplot(plsnyneg,links2,col=1)}
+      }else{
+        plot3d(plsnyneg,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+        if(is.null(links2)==F){lineplot(plsnyneg,links2,col=1)}}
+      next3d()
+      text3d(0,0,0, "Block2 negative")
+    }#### fine condizione 2d/3d
+    
+    if(dim(block1)[2]<3&dim(block2)[2]<3){
+      
+      themax<-list(plsnxpos,plsnxneg,plsnypos,plsnyneg)[which.max(c(css1,css2))][[1]]
+      if(which.max(css1)<2){themaxx<-plsnxpos}else{themaxx<-plsnxneg}
+      if(which.max(css2)<2){themaxy<-plsnypos}else{themaxy<-plsnyneg}
+      
+      par(mfrow=c(2,2))
+      if(heatmap==F){
+        if(commonref==T){plotmyarrays(plsnxpos,links=links1,txt=F,pch=19,xlim=range(themax[,1]),ylim=range(themax[,2]))}else{
+          plotmyarrays(plsnxpos,links=links1,txt=F,pch=19,xlim=range(themaxx[,1]),ylim=range(themaxx[,2])) 
+        }
+        
+        title("Block1 positive")
+        
+        if(commonref==T){plotmyarrays(plsnxneg,links=links1,txt=F,pch=19,xlim=range(themax[,1]),ylim=range(themax[,2]))}else{
+          plotmyarrays(plsnxneg,links=links1,txt=F,pch=19,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]))
+        }
+        title("Block1 negative")
+        
+        if(commonref==T){plotmyarrays(plsnypos,links=links1,txt=F,pch=19,xlim=range(themax[,1]),ylim=range(themax[,2]))}else{
+          plotmyarrays(plsnypos,links=links1,txt=F,pch=19,xlim=range(themaxy[,1]),ylim=range(themaxy[,2])) 
+        }
+        title("Block2 positive")
+        
+        if(commonref==T){plotmyarrays(plsnyneg,links=links1,txt=F,pch=19,xlim=range(themax[,1]),ylim=range(themax[,2]))}else{
+          plotmyarrays(plsnyneg,links=links1,txt=F,pch=19,xlim=range(themaxy[,1]),ylim=range(themaxy[,2])) 
+        }
+        title("Block2 positive")}else{
+          
+          image.plot(xyz2img(cbind(myhxpos$interpcoords,myhxpos$pred),tolerance=myhxpos$tol),asp=1,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]),col=myhxpos$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+          par(new=T)
+          plot(myhxpos$mate,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]),asp=1,pch=19,cex=1,xaxt="n",yaxt="n",bty="n",xlab="",ylab="",main="Block1 positive")
+          if(is.null(links1)==F){lineplot(myhxpos$mate,links1)}
+          lines(myhxpos$tpsgrid$grid$ngrid,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]))
+          lines(myhxpos$tpsgrid$grid$ngrid2,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]))
+          par(new=T)
+          plot(myhxpos$mate2,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]),asp=1,pch=19,cex=0.5,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+          if(is.null(links1)==F){lineplot(myhxpos$mate2,links1,col=2,lwd=2)}
+          image.plot(xyz2img(cbind(myhxneg$interpcoords,myhxneg$pred),tolerance=myhxneg$tol),asp=1,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]),col=myhxneg$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+          par(new=T)
+          plot(myhxneg$mate,xlim=range(themaxx[,1]),ylim=range(themaxx[,2]),asp=1,pch=19,cex=1,xaxt="n",yaxt="n",bty="n",xlab="",ylab="",main="Block1 negative")
+          if(is.null(links1)==F){lineplot(myhxneg$mate,links1)}
+          lines(myhxneg$tpsgrid$grid$ngrid,xlim=range(themax[,1]),ylim=range(themax[,2]))
+          lines(myhxneg$tpsgrid$grid$ngrid2,xlim=range(themax[,1]),ylim=range(themax[,2]))
+          par(new=T)
+          plot(myhxneg$mate2,xlim=range(themax[,1]),ylim=range(themax[,2]),asp=1,pch=19,cex=0.5,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+          if(is.null(links1)==F){lineplot(myhxneg$mate2,links1,col=2,lwd=2)}
+          image.plot(xyz2img(cbind(myhypos$interpcoords,myhypos$pred),tolerance=myhypos$tol),asp=1,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]),col=myhypos$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+          par(new=T)
+          plot(myhypos$mate,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]),asp=1,pch=19,cex=1,xaxt="n",yaxt="n",bty="n",xlab="",ylab="",main="Block2 positive")
+          if(is.null(links2)==F){lineplot(myhypos$mate,links2)}
+          lines(myhypos$tpsgrid$grid$ngrid,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]))
+          lines(myhypos$tpsgrid$grid$ngrid2,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]))
+          par(new=T)
+          plot(myhypos$mate2,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]),asp=1,pch=19,cex=0.5,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+          if(is.null(links2)==F){lineplot(myhypos$mate2,links2,col=2,lwd=2)}
+          image.plot(xyz2img(cbind(myhyneg$interpcoords,myhyneg$pred),tolerance=myhyneg$tol),asp=1,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]),col=myhyneg$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+          par(new=T)
+          plot(myhyneg$mate,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]),asp=1,pch=19,cex=1,xaxt="n",yaxt="n",bty="n",xlab="",ylab="",main="Block2 negative")
+          if(is.null(links2)==F){lineplot(myhyneg$mate,links2)}
+          lines(myhyneg$tpsgrid$grid$ngrid,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]))
+          lines(myhyneg$tpsgrid$grid$ngrid2,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]))
+          par(new=T)
+          plot(myhyneg$mate2,xlim=range(themaxy[,1]),ylim=range(themaxy[,2]),asp=1,pch=19,cex=0.5,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
+          if(is.null(links2)==F){lineplot(myhyneg$mate2,links2,col=2,lwd=2)}
+          
+        }
+    } ##fine 2d/2d 
+  }###   fine condizione forma-forma
+  out<-list(plsob=thepls,allxscores=XScores,allyscores=YScores,if(!is.null(group)){xscoresmeans=xscoresmeans}else{ck=2},if(!is.null(group)){yscoresmeans=yscoresmeans}else{ck=2})
+  if(length(out)>3){names(out)=c("pls","allxscores","allyscores","xscoresmeans","yscoresmeans")}else{NULL}
+  return(out)
+}
+#' export
+plotptau5<-function(objptau,links=NULL,projorig=T,whichaxes=c(1,2),cexscale=round(max(centroid.size(objptau$arrayord)),digits=0),shapescale=10,mag=1,subplotdim=2,shiftnegy=1,shiftposy=1,shiftnegx=1,shiftposx=1,col=as.numeric(objptau$factorord),pch=19,triang=NULL,from=0,topcs=NULL,tore=NULL,plotsource=T){
+  library(TeachingDemos)
+  k<-dim(objptau$arrayord)[1]
+  m<-dim(objptau$arrayord)[2]
+  n<-dim(objptau$arrayord)[3]
+  transp<-read.inn(objptau$shifted,k,m)
+  
+  origsize<-objptau$indepepure
+  
+if(projorig==T){
+ordiwithshapes(objptau$space1mshape,objptau$space1$x,objptau$space1$rotation,procSym=F,whichaxes=whichaxes,addata=objptau$origproj[,whichaxes],asp=1,factraj=objptau$factorord,cex=origsize/cexscale,triang=triang,from=from,to=topcs,links=links,mag=mag,shiftnegy=1.5,shiftposy=2,col=col,pch=pch,subplotdim=subplotdim,plotsource=plotsource)
+  title("LS on predictions in PCA space and original data re-projected")}else{
+
+ordiwithshapes(objptau$space1mshape,objptau$space1$x,objptau$space1$rotation,procSym=F,whichaxes=whichaxes,asp=1,factraj=objptau$factorord,cex=origsize/cexscale,triang=triang,from=from,to=topcs,links=links,mag=mag,shiftnegy=1.5,shiftposy=2,col=col,pch=pch,subplotdim=subplotdim,plotsource=plotsource)
+  title("LS on predictions in PCA space")}
+
+  
+  
+  ranges<-apply(rbind(objptau$space1$x,objptau$origproj),2,range)
+  
+  ratesorig<-ratesbygroup(read.inn(objptau$predictpure2,k,m),objptau$factorord,objptau$indepepure)
+  plot(objptau$indepepure,ratesorig,pch=pch,col=col)
+  for(i in 1:nlevels(objptau$factorord)){
+    lines(objptau$indepepure[as.numeric(objptau$factorord)==i][-firstsfac(objptau$factorord)],ratesorig[as.numeric(objptau$factorord)==i][-firstsfac(objptau$factorord)],col=col[firstsfac(objptau$factorord)][i])
+  }
+  title("Rates of shape change among consecutive predictions per unit size in original data")
+  
+  ratestrasp<-ratesbygroup(objptau$predictpure,objptau$factorord,objptau$indepepure)
+  
+  plot(objptau$indepepure,ratestrasp,pch=pch,col=col)
+  for(i in 1:nlevels(objptau$factorord)){
+    
+    lines(objptau$indepepure[as.numeric(objptau$factorord)==i][-firstsfac(objptau$factorord)],ratestrasp[as.numeric(objptau$factorord)==i][-firstsfac(objptau$factorord)],col=col[firstsfac(objptau$factorord)][i])
+  }
+  
+  
+  
+  title("Rates of shape change among consecutive predictions per unit size in transported data")
+  
+  
+  
+  plot(ratesorig,ratestrasp,col=col,pch=pch)
+  title("Original rates of shape change per unit size vs those of transported data")
+  
+  adults<-NULL
+  adultsdaplot<-NULL
+  for(i in 1:nlevels(objptau$factorord)){
+    adulti<-array(showPC2(objptau$space1$x[lastsfac(objptau$factorord),1:3][i,],objptau$space1$rotation[,1:3],objptau$space1mshape),dim=c(k,m,1))
+    adultdaploti<-array(showPC2(objptau$space1$x[lastsfac(objptau$factorord),1:3][i,]*mag,objptau$space1$rotation[,1:3],objptau$space1mshape),dim=c(k,m,1))
+    
+    adults<-abind::abind(adults,adulti)
+    adultsdaplot<-abind::abind(adultsdaplot,adultdaploti)
+  }
+  
+  if(m<3){adultsdaplot<-abind::abind(adultsdaplot,array(rep(0,k*n),dim=c(k,1,nlevels(objptau$factorord))),along=2)}
+  
+  init<-array(showPC2(objptau$space1$x[firstsfac(objptau$factorord),1:3][1,],objptau$space1$rotation[,1:3],objptau$space1mshape),dim=c(k,m,1))
+  initdaplot<-array(showPC2(objptau$space1$x[firstsfac(objptau$factorord),1:3][1,]*mag,objptau$space1$rotation[,1:3],objptau$space1mshape),dim=c(k,m,1))
+  
+  if(m<3){initdaplot<-abind::abind(initdaplot,array(rep(0,k*n),dim=c(k,1,1)),along=2)}
+  
+  if(is.null(triang)==F){
+  adultsdaplotvis<-NULL
+  for(i in 1:nlevels(objptau$factorord)){
+  adultsdaplotvisi<-meshDist(plotsurf(adultsdaplot[,,i],triang,plot=F),plotsurf(initdaplot[,,1],triang,plot=F),to=tore,from=from,plot=F)
+  daagg<-objptau$space1$x[1:n,1:3][lastsfac(objptau$factorord),][i,]
+  adultsdaplotvisi<-translate3d(scalemesh(adultsdaplotvisi$colMesh,1/shapescale,center="none"),daagg[1],daagg[2],daagg[3])
+ adultsdaplotvis<-c(adultsdaplotvis,list(adultsdaplotvisi))
+  }
+  }
+  
+  
+  
+  
+  open3d()
+  for(i in 1:nlevels(objptau$factorord)){
+    lines3d(objptau$space1$x[1:n,1:3][as.numeric(objptau$factorord)==i,],col=i,add=T)
+  }
+  
+  if(is.null(triang)==T){
+  babedaagg<-rep.row(objptau$space1$x[firstsfac(objptau$factorord),1:3][1,],k)
+  for(i in 1:nlevels(objptau$factorord)){
+    daplottarei<-adultsdaplot[,,i]
+    daagg<-rep.row(objptau$space1$x[1:n,1:3][lastsfac(objptau$factorord),][i,],k)
+    plot3D((daplottarei/shapescale)+daagg,col=i,add=T,size=1,bbox=F)
+    lineplot((daplottarei/shapescale)+daagg,links,col=i)
+  }
+  plot3D((initdaplot[,,1]/shapescale)+babedaagg,bbox=F,add=T)
+  lineplot((initdaplot[,,1]/shapescale)+babedaagg,links)
+  
+  }else{
+    
+    for(i in 1:nlevels(objptau$factorord)){
+      shade3d(adultsdaplotvis[[i]],add=T)
+    }
+    babedaagg<-rep.row(objptau$space1$x[firstsfac(objptau$factorord),1:3][1,],k)
+  shade3d(plotsurf((initdaplot[,,1]/shapescale)+babedaagg,triang,plot=F),add=T,alpha=0.5)
+    }
+  title3d("LS data in the PCA; first three PC scores")
+   decorate3d()
+  out<-list(ratesorig=ratesorig,ratestrasp=ratestrasp)
+  
+}
+#' export
+
+benfrombygroup<-function(locs,array,factor,doopa=T){
+  resu<-NULL
+  for(j in 1:nlevels(factor)){
+    for(k in 1:table(factor)[j]){
+    resui<-jbe(locs[,,j],array[,,as.numeric(factor)==j][,,k],doopa=doopa)
+    resu<-append(resu,resui)
+    print(paste(j,k,sep="_"))
+    }
+  }
+  resu
+}
+#' @export
+
+plotancova<-function(y,x,group=NULL,pch=NULL,col=1,confint=T,cex=0.5,legend=T,labels=NULL,plot=T,xlab=NULL,ylab=NULL,xlim=range(x),ylim=range(y)){
+  
+  
+  if(is.null(group)==T){group<-factor(c(rep(1,length(y))))}else{pch=pch}
+  
+  
+  if(is.null(pch)==T){pch=19}else{pch=pch}
+  dati<-data.frame(group,as.numeric(group),col,pch)
+  
+  if(is.null(xlab)==T){xlab<-c("x")}else{xlab<-xlab}
+  if(is.null(ylab)==T){ylab<-c("y")}else{ylab<-ylab}
+  if(plot==T){plot(x,y,xlim=xlim,ylim=ylim,col=col,pch=pch,cex=cex,xlab=xlab,ylab=ylab)}
+  
+  
+  
+  if(!is.null(labels)){textxy(x,y,labels)}
+  
+  
+  lmlist<-NULL
+  for(i in 1:nlevels(group)){ 
+    lmi<-lm(y[as.numeric(group)==i]~x[as.numeric(group)==i])  
+    lmlist<-c(lmlist,list(lmi))
+  }
+  names(lmlist)<-levels(group)
+  
+  
+  datapredinflist<-NULL
+  for(i in 1:nlevels(group)){
+    datapredinfi<-cbind(x[as.numeric(group)==i], predict(lmlist[[i]], interval="confidence")[,2])
+    datapredinfi<-datapredinfi[order(datapredinfi[,2]),]
+    datapredinflist<-c(datapredinflist,list(datapredinfi))
+  }  
+  
+  names(datapredinflist)<-levels(group)
+  
+  
+  datapredsuplist<-NULL
+  for(i in 1:nlevels(group)){
+    datapredsupi<-cbind(x[as.numeric(group)==i], predict(lmlist[[i]], interval="confidence")[,3])
+    datapredsupi<-datapredsupi[order(datapredsupi[,2]),]
+    datapredsuplist<-c(datapredsuplist,list(datapredsupi))
+  }    
+  
+  names(datapredsuplist)<-levels(group)
+  
+  if(plot==T){
+    for(i in 1: length(lmlist)){
+      abline(lmlist[[i]],col=dati[as.numeric(group)==i,][1,3],ylim=ylim,xlim=xlim)
+    }   }                
+  
+  if(plot==T){
+    if(confint==T){
+      for(i in 1: length(lmlist)){
+        if(anova(lmlist[[i]])$Pr[1]<0.05){
+          lines(datapredinflist[[i]],cex=0.1,lty = 'dashed',col=dati[as.numeric(group)==i,][1,3],ylim=ylim,xlim=xlim)
+        }}
+      
+      for(i in 1: length(lmlist)){
+        if(anova(lmlist[[i]])$Pr[1]<0.05){
+          lines(datapredsuplist[[i]],cex=0.1,lty = 'dashed',col=dati[as.numeric(group)==i,][1,3],ylim=ylim,xlim=xlim)
+        }}
+    }}
+  
+  if(legend==T){
+    x11()
+    plot(x,y,col="white")
+    legend(min(x),max(y),unique(group), cex=1, col=unique(col), pch=unique(pch),box.col="white")}
+  
+  summarylist<-NULL
+  for(i in 1:length(lmlist)){
+    summarylisti<-summary(lmlist[[i]])  
+    summarylist<-c(summarylist,list(summarylisti))
+  }
+  
+  names(summarylist)<-levels(group)
+  sint_results<-NULL
+  
+  for(i in 1:length(summarylist)){
+    inti<-summarylist[[i]]$coefficients[1,1]
+    p_inti<-summarylist[[i]]$coefficients[1,4]
+    betai<-summarylist[[i]]$coefficients[2,1]
+    p_betai<-summarylist[[i]]$coefficients[2,4]
+    r_sqi<-summarylist[[i]]$r.squared
+    
+    sinti<-c(inti,p_inti,betai,p_betai,r_sqi)
+    
+    sint_results<-rbind(sint_results,sinti)
+  }
+  rownames(sint_results)<-levels(group)
+  colnames(sint_results)<-c("Intercept","p-value Intercept","Beta","p-value Beta","R squared")
+  
+  
+  print(sint_results)
+  df<-data.frame(y=y,x=x,group=group)
+  model<-lm(y~x*group)
+  library(phia)
+
+  slopint<-testInteractions(model, pairwise="group", slope="x") #####  TESTA SLOPE 
+  slopintmat<- matrix(NA, nlevels(spe), nlevels(spe))
+  slopintmat[lower.tri(slopintmat) ] <-round( slopint[1:(nrow(slopint)-1),5], 5)
+  slopintmat<-t(slopintmat)
+  colnames(slopintmat)<-levels(spe)
+  rownames(slopintmat)<-levels(spe)
+  slopintmat[lower.tri(slopintmat)]<-slopintmat[upper.tri(slopintmat)]
+
+  
+  
+  elevint<-testInteractions(lm(y~x+group)) 
+  elevintmat<- matrix(NA, nlevels(group), nlevels(group))
+  elevintmat[lower.tri(elevintmat) ] <-round( elevint[1:(nrow(elevint)-1),5], 5)
+  elevintmat<-t(elevintmat)
+  colnames(elevintmat)<-levels(group)
+  rownames(elevintmat)<-levels(group)
+  elevintmat[lower.tri(elevintmat)]<-elevintmat[upper.tri(elevintmat)]
+
+  out<-list(datapredsuplist=datapredsuplist,datapredinflist=datapredinflist,summarylist=summarylist,sint_results=sint_results,slopepval=slopintmat,elevpval=elevintmat)
+return(out)
+}
+#' @export
+heat3d<-function(source,target,triang,iter=3,linkss=NULL,linkst=NULL,plotlands=F,legend=T,cols=1,colt=2,plotsource=T,plottarget=T,collinkss=1,lwds=2,collinkst=2,lwdt=2,cexs=0.5,cext=0.5,colors=c("blue4","cyan2","yellow","red4"),alpha=1,ngrid=0,mag=1,graphics=T,to=NULL,from=NULL,scaleramp=F,lines=T){
   mate<-source
   mate2<-target
   mate2<-mate+(mate2-mate)*mag
@@ -13,20 +793,44 @@ heat3d<-function(source,target,triang,iter=3,linkss=NULL,legend=T,cols=1,colt=2,
   class(tes) <- "mesh3d"
   matr<-mate
   M<-t(tes$vb)[,1:3][-c(1:nrow(matr)),]
-
+  
+  
+  tes2<-tessell3d(triang,mate2,iter)
+  class(tes2) <- "mesh3d"
+  
+  M2<-t(tes2$vb)[,1:3][-c(1:nrow(matr)),]
+  
   tpsgrid<-tpsgridpaolo(mate,mate2,linksTT=linkss,linksYY=linkss,graphics=F,ngrid=22)
+  # 
+  # veclist<-NULL
+  # for(j in 1:nrow(M)){
+  #   vecj<-NULL
+  #   for(i in 1:nrow(matr)){
+  #     vec1ji<--2*sqrt(abs(M[j,1]-matr[i,1]))
+  #     vec2ji<--2*sqrt(abs(M[j,2]-matr[i,2]))
+  #     vec3ji<--2*sqrt(abs(M[j,3]-matr[i,3]))
+  #     vecji<-c(vec1ji,vec2ji,vec3ji)
+  #     vecj<-rbind(vecj,vecji)
+  #   }
+  #   veclist<-c(veclist,list(vecj))
+  # }
+  # 
+  
   veclist<-NULL
   for(j in 1:nrow(M)){
     vecj<-NULL
     for(i in 1:nrow(matr)){
-      vec1ji<--2*sqrt(abs(M[j,1]-matr[i,1]))
-      vec2ji<--2*sqrt(abs(M[j,2]-matr[i,2]))
-      vec3ji<--2*sqrt(abs(M[j,3]-matr[i,3]))
+      vec1ji<-2*(M[j,1]-matr[i,1])+2*(M[j,1]-matr[i,1])*log((M[j,1]-matr[i,1])^2+(M[j,2]-matr[i,2])^2)
+      vec2ji<-2*(M[j,2]-matr[i,2])+2*(M[j,2]-matr[i,2])*log((M[j,1]-matr[i,1])^2+(M[j,2]-matr[i,2])^2)
+      vec3ji<-2*(M[j,3]-matr[i,3])+2*(M[j,3]-matr[i,3])*log((M[j,1]-matr[i,1])^2+(M[j,2]-matr[i,2])^2)
+      
       vecji<-c(vec1ji,vec2ji,vec3ji)
       vecj<-rbind(vecj,vecji)
     }
     veclist<-c(veclist,list(vecj))
   }
+  
+  
   jac<-NULL
   for(i in 1: length(veclist)){
     jaci<-t(tpsgrid$B)+t(tpsgrid$W)%*%veclist[[i]]
@@ -47,22 +851,22 @@ heat3d<-function(source,target,triang,iter=3,linkss=NULL,legend=T,cols=1,colt=2,
   myj<-unlist(lapply(jac,det))
   obs<-log2(myj/detmean)
   fit<- Tps(M, obs) 
-  obs2<-predict(fit,mate)
-  obs3<-c(obs2,obs)
+  obs2<-predict(fit,M2)
+  obs3<-c(obs2)
   
   obs3[is.na(obs3)]<-mean(obs3,na.rm=T)
   
-  obm<-meshDist(plotsurf(rbind(mate,M),tes$it,plot=F),distv=obs3,add=T,rampcolors =colors,to=to,from=from,plot=T)
-  rgl.close()
+  obm<-meshDist(plotsurf(rbind(mate2,M2),tes2$it,plot=F),distv=obs3,add=T,rampcolors =colors,to=to,from=from,scaleramp=scaleramp,plot=F,alpha=alpha)
   if(graphics==T){
-  deformGrid3d(mate,mate2,ngrid=ngrid,lines=lines,col1=cols,col2=colt)
-  shade3d(obm$colMesh)
-  if(!is.null(linkss)){lineplot(mate,linkss,col=collinkss,lwd=lwds)}
-  if(plotsource==T){
-  if(!is.null(linkss)){lineplot(mate2,linkss,col=collinkst,lwd=lwdt)}}
+    if(plotlands==T){deformGrid3d(mate,mate2,ngrid=ngrid,lines=lines,col1=cols,col2=colt)}
+    shade3d(obm$colMesh,alpha=alpha)
+    if(!is.null(linkst)){lineplot(mate2,linkst,col=collinkst,lwd=lwds)}
+    if(plotsource==T){
+      shade3d(plotsurf(source,t(triang),plot=F),alpha=0.5)
+      if(!is.null(linkss)){lineplot(mate,linkss,col=collinkss,lwd=lwdt)}}
   }
-
-  out<-list(mate=mate,mate2=mate2,centros=M,jacs=jac,detjac=myj,detmean=detmean,obs=obs,obs2=obs2,fit=fit,cols=makeTransparent(colorRampPalette(colors)(n = length(obs3)),alpha=alpha),tes=tes,obm=obm)
+  
+  out<-list(mate=mate,mate2=mate2,centros=M,jacs=jac,detjac=myj,detmean=detmean,obs=obs,obs2=obs2,obs3=obs3,fit=fit,cols=makeTransparent(colorRampPalette(colors)(n = length(obs3)),alpha=alpha),tes=tes,obm=obm,sourcem=plotsurf(source,t(triang),plot=F))
   out
 }
 #' @export
@@ -979,10 +1783,6 @@ tpsgrid<-tpsgridpaolo(init,fin,linksTT=linkss,linksYY=linkss,axes2d=T,ext=ext,gr
   out<-list(mate=fin,mate2=init,centros=M,interpcoords=sr1,jacs=jac,detjac=myj,detmean=detmean,obs=obs,fit=fit,pred=pred,xlim=tpsgrid$grid$xlim,ylim=tpsgrid$grid$ylim,tol=tol,cols=makeTransparent(colorRampPalette(colors)(n = length(obs)),alpha=alpha),tpsgrid=tpsgrid,sumse=sum(sens2),pols=pols,pols2=pols2,areasipob=po)
   out
 }
-
-
-
-
 
 
 
