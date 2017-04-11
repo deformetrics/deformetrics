@@ -24,7 +24,7 @@
 #' plottraj(procSym(dtcase1,CSinit=T)$PCscores[,1:2],group,asp=1)######## transported data recover the cycle
 #' }
 #' @export  
-newdt<-function(array,group,CR=NULL,pole=CR,diffpole=F,locs=NULL,center=T,CSinit=F,tolrot=1,tol=1e-8,doopa=T,domopa=T){
+newdt<-function(array,group,CR=NULL,pole=CR,diffpole=F,locs=NULL,center=T,CSinit=F,tolrot=1,tol=1e-8,doopa=T,domopa=T,qid=F){
   if(center==T){array<-centershapes(array)}
   
   group<-factor(group,levels=unique(group))
@@ -32,7 +32,7 @@ newdt<-function(array,group,CR=NULL,pole=CR,diffpole=F,locs=NULL,center=T,CSinit
   m<-dim(array)[2]
   n<-length(group)
   ng<-table(group)
-  if(is.null(CR)){CR<-procSym(array,scale=F,pcAlign=F)$mshape}else{CR=CR}
+  if(is.null(CR)){CR<-procSym(array,scale=F,pcAlign=F,CSinit=CSinit)$mshape}else{CR=CR}
   
   if(is.null(locs)){
     locs<-NULL
@@ -40,36 +40,36 @@ newdt<-function(array,group,CR=NULL,pole=CR,diffpole=F,locs=NULL,center=T,CSinit
       locsi<-procSym(array[,,as.numeric(group)==i,drop=F],scale=F,CSinit=CSinit,pcAlign=F)$mshape 
       locs<-abind::abind(locs,array(locsi,dim=c(k,m,1)))
     }}else(locs<-locs)
-  
+
   if(doopa==T){
-    loop<-opaloop2(CR,locs,reflect=F)
-    pos1<-(acos(abs(list2array(loop$rots)[1,1,]))*180)/pi
-    if(pos1=="NaN"){pos1<-tolrot+1e-4}
-    if(max(pos1)>tolrot){locs<-loop$looped}
-    print("Angles between CR and locs aligned with it")
-    print(pos1)
-    
-    if(diffpole==T){
-      loop<-opaloop2(pole,locs,reflect=F)
-      pos1<-(acos(abs(list2array(loop$rots)[1,1,]))*180)/pi
-      if(pos1=="NaN"){pos1<-tolrot+1e-4}
-      if(max(pos1)>tolrot){locs<-loop$looped}
-      print("Angles between CR and locs aligned with it")
-      print(pos1)
-    }}
+  loop<-opaloop2(CR,locs,reflect=F)
+  pos1<-(acos(abs(list2array(loop$rots)[1,1,]))*180)/pi
+  if(pos1=="NaN"){pos1<-tolrot+1e-4}
+  if(max(pos1)>tolrot){locs<-loop$looped}
+  print("Angles between CR and locs aligned with it")
+  print(pos1)
+  
+  if(diffpole==T){
+  loop<-opaloop2(pole,locs,reflect=F)
+  pos1<-(acos(abs(list2array(loop$rots)[1,1,]))*180)/pi
+  if(pos1=="NaN"){pos1<-tolrot+1e-4}
+  if(max(pos1)>tolrot){locs<-loop$looped}
+  print("Angles between CR and locs aligned with it")
+  print(pos1)
+  }}
   
   
   if(domopa==T){
-    hiermopizedtps<-NULL
-    hiermopized<-NULL
-    for(i in 1:nlevels(group)){
-      for(j in 1:(ng[i])){
-        hiermopizedtpsij<-mopa(locs[,,i],array[,,as.numeric(group)==i,drop=F][,,j],rot=c("mopa"),CSinit=CSinit)
-        hiermopizedtps<-c(hiermopizedtps,list(hiermopizedtpsij[5:7])) 
-        hiermopized<-abind::abind(hiermopized,hiermopizedtpsij$opizzata)
-      }}
-  }else{hiermopized<-array}
-  
+  hiermopizedtps<-NULL
+  hiermopized<-NULL
+  for(i in 1:nlevels(group)){
+    for(j in 1:(ng[i])){
+      hiermopizedtpsij<-mopa(locs[,,i],array[,,as.numeric(group)==i,drop=F][,,j],rot=c("mopa"),CSinit=CSinit)
+      hiermopizedtps<-c(hiermopizedtps,list(hiermopizedtpsij[5:7])) 
+      hiermopized<-abind::abind(hiermopized,hiermopizedtpsij$opizzata)
+    }}
+}else{hiermopized<-array}
+ 
   
   dummygm<-newmb(CR,CR)
   eig11<-eigen(dummygm$gamma11)
@@ -79,21 +79,21 @@ newdt<-function(array,group,CR=NULL,pole=CR,diffpole=F,locs=NULL,center=T,CSinit
   Ubmod<-Ub[-datoglie,]
   
   if(diffpole==T){ 
-    dummypole<-newmb(pole,pole)
-    eigpole11<-eigen(dummypole$gamma11)
-    datogliepole<-which(Re(eigpole11$value)<tol)
-    Ubpole<-t(eigpole11$vectors)
-    appopole<-diag(sqrt(eigpole11$values))%*%Ubpole
-    Ubpolemod<-Ubpole[-datogliepole,]
-    #Mb<-rbind(t(dummypole$h%*%CR),appo[-datoglie,]%*%dummypole$snew)#
-    
-    
-    svdb<-svd(Ubpolemod%*%dummypole$snew%*%dummygm$snew%*%t(Ubmod))
-    Rb<-svdb$v%*%t(svdb$u)
-    Mb<-rbind(t(dummygm$h%*%CR),t(Rb)%*%appo[-datoglie,]%*%dummygm$snew)
-  }else{
-    
-    Mb<-rbind(t(dummygm$h%*%CR),appo[-datoglie,]%*%dummygm$snew)}
+  dummypole<-newmb(pole,pole)
+  eigpole11<-eigen(dummypole$gamma11)
+  datogliepole<-which(Re(eigpole11$value)<tol)
+  Ubpole<-t(eigpole11$vectors)
+  appopole<-diag(sqrt(eigpole11$values))%*%Ubpole
+  Ubpolemod<-Ubpole[-datogliepole,]
+  #Mb<-rbind(t(dummypole$h%*%CR),appo[-datoglie,]%*%dummypole$snew)#
+     
+
+     svdb<-svd(Ubpolemod%*%dummypole$snew%*%dummygm$snew%*%t(Ubmod))
+     Rb<-svdb$v%*%t(svdb$u)
+       Mb<-rbind(t(dummygm$h%*%CR),t(Rb)%*%appo[-datoglie,]%*%dummygm$snew)
+}else{
+  
+  Mb<-rbind(t(dummygm$h%*%CR),appo[-datoglie,]%*%dummygm$snew)}
   
   transported<-NULL
   for(i in 1:nlevels(group)){
@@ -105,33 +105,31 @@ newdt<-function(array,group,CR=NULL,pole=CR,diffpole=F,locs=NULL,center=T,CSinit
       appoij<-diag(sqrt(eig11ij$values))%*%Uaij
       Uamodij<-Uaij[-datoglie,]
       svdij<-svd(Ubmod%*%dummygm$snew%*%newmbij$snew%*%t(Uamodij))
-      Rij<-svdij$v%*%t(svdij$u)
-      #Rij<-diag(k-m-1)##############   qui è se vuoi usare l'identità
+      if(qid==F){Rij<-svdij$v%*%t(svdij$u)}else{Rij<-diag(k-m-1)}##############   qui è se vuoi usare l'identità
       Maij<-rbind(t(dummygm$h%*%locs[,,i]),t(Rij)%*%appoij[-datoglie,]%*%newmbij$snew)
       vbij<-(newmbij$h%*%CR%*%newmbij$gamma21+dummygm$snew%*%solve(Mb)%*%Maij%*%newmbij$gamma11)%*%vaij
       transportedij<-CR+t(newmbij$h)%*%vbij
       transported<-abind::abind(transported,array(transportedij,dim=c(k,m,1)))
     }
   }
-  
+
   
   if(diffpole==T){
     transported<-NULL
     for(i in 1:nlevels(group)){
       for(j in 1:(ng[i])){
-        vaij<-dummypole$h%*%(hiermopized[,,as.numeric(group)==i][,,j]-locs[,,i])
-        newmbij<-newmb(locs[,,i],hiermopized[,,as.numeric(group)==i][,,j])
-        eig11ij<-eigen(newmbij$gamma11)
-        Uaij<-t(eig11ij$vectors)
-        appoij<-diag(sqrt(eig11ij$values))%*%Uaij
-        Uamodij<-Uaij[-datoglie,]
-        svdij<-svd(Ubpolemod%*%dummypole$snew%*%newmbij$snew%*%t(Uamodij))
-        Rij<-svdij$v%*%t(svdij$u)
-        #Rij<-diag(k-m-1)##############   qui è se vuoi usare l'identità
-        Maij<-rbind(t(dummygm$h%*%locs[,,i]),t(Rij)%*%appoij[-datoglie,]%*%newmbij$snew)
-        vbij<-(newmbij$h%*%CR%*%newmbij$gamma21+dummygm$snew%*%solve(Mb)%*%Maij%*%newmbij$gamma11)%*%vaij
-        transportedij<-CR+t(newmbij$h)%*%vbij
-        transported<-abind::abind(transported,array(transportedij,dim=c(k,m,1)))
+    vaij<-dummypole$h%*%(hiermopized[,,as.numeric(group)==i][,,j]-locs[,,i])
+    newmbij<-newmb(locs[,,i],hiermopized[,,as.numeric(group)==i][,,j])
+    eig11ij<-eigen(newmbij$gamma11)
+    Uaij<-t(eig11ij$vectors)
+    appoij<-diag(sqrt(eig11ij$values))%*%Uaij
+    Uamodij<-Uaij[-datoglie,]
+    svdij<-svd(Ubpolemod%*%dummypole$snew%*%newmbij$snew%*%t(Uamodij))
+if(qid==F){Rij<-svdij$v%*%t(svdij$u)}else{Rij<-diag(k-m-1)}##############   qui è se vuoi usare l'identità
+Maij<-rbind(t(dummygm$h%*%locs[,,i]),t(Rij)%*%appoij[-datoglie,]%*%newmbij$snew)
+    vbij<-(newmbij$h%*%CR%*%newmbij$gamma21+dummygm$snew%*%solve(Mb)%*%Maij%*%newmbij$gamma11)%*%vaij
+    transportedij<-CR+t(newmbij$h)%*%vbij
+    transported<-abind::abind(transported,array(transportedij,dim=c(k,m,1)))
       }
     }  
   }
