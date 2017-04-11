@@ -8,7 +8,7 @@ ontrajplot(objptau, z = 5, triang = NULL, links = NULL, heat = F,
   grid2d = T, linkss = T, linksscol = 2, lwdt = 1, lwds = 1,
   scaleramp = F, heatcolors = c("blue4", "cyan2", "yellow", "red4"),
   polyn = 1, mar = c(0.3, 0.3, 0.3, 0.3), mai = c(0, 0, 0.3, 0),
-  oma = c(0, 0, 3, 0), mag = 1, levelcex2d = 1)
+  oma = c(0, 0, 3, 0), mag = 1, levelcex2d = 1,levelcex3d=1,exts=NULL)
 }
 \arguments{
 \item{objptau}{list: an object resulting from ptau6() function}
@@ -28,10 +28,12 @@ ontrajplot(objptau, z = 5, triang = NULL, links = NULL, heat = F,
 \item{mag}{numeric: magnification parameter}
 
 \item{levelcex2d}{numeric: text size for group names for 2D data}
+\item{levelcex3d}{numeric: text size for group names for 3D data}
+\item{exts}{numeric: a vector of length equal to the total number of subplots with "ext" values argument of tpsgrid() function in "shapes" package}
 
 \item{z=5}{numeric: the number of predictions evaluated at equally spaced size values on per-group ranges.}
 
-\item{triang=NULL}{list: trinagulation structure for 3D data}
+\item{triang=NULL}{list: triangulation structure for 3D data}
 
 \item{links=NULL}{list: links structure}
 
