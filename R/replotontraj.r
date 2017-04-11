@@ -64,7 +64,7 @@
 #' replotontraj(ontra33)##replot rapidly the object
 #' }
 #' @export 
-replotontraj<-function(ontrajplotobject,zlimp=NULL,zlimo=NULL,fromp=NULL,top=NULL,fromo=NULL,too=NULL,linksscol=2,lwdt=1,lwds=1,scaleramp=F,heatcolors=c("blue4","cyan2","yellow","red4"),polyn=1,mar=c(0.3,0.3,0.3,0.3),mai=c(0,0,0.3,0),oma=c(0,0,3,0),mag=1,levelcex2d=1){
+replotontraj<-function(ontrajplotobject,zlimp=NULL,zlimo=NULL,fromp=NULL,top=NULL,fromo=NULL,too=NULL,linksscol=2,lwdt=1,lwds=1,scaleramp=F,heatcolors=c("blue4","cyan2","yellow","red4"),polyn=1,mar=c(0.3,0.3,0.3,0.3),mai=c(0,0,0.3,0),oma=c(0,0,3,0),mag=1,levelcex2d=1,levelcex3d=1){
   factorord<-ontrajplotobject$factorord
   links<-ontrajplotobject$links
   linkss<-ontrajplotobject$linkss
@@ -87,15 +87,17 @@ replotontraj<-function(ontrajplotobject,zlimp=NULL,zlimo=NULL,fromp=NULL,top=NUL
   allithso2<-ontrajplotobject$allithso2
   z<-ontrajplotobject$z
   m<-ontrajplotobject$m
+  exts<-ontrajplotobject$exts
+  ext2<-ontrajplotobject$exts2
   
-  if(is.null(zlimp)==T){zlimp=range(na.omit(unlist(allobsp2)))}else{zlimp=zlimp}
-  if(is.null(zlimo)==T){zlimo=range(na.omit(unlist(allobso2)))}else{zlimp=zlimo}
+  if(is.null(zlimp)==T){zlimp=range(na.omit(c(unlist(subListExtract(allithsp2,"pred")),unlist(allobsp2))))}else{zlimp=zlimp}
+  if(is.null(zlimo)==T){zlimo=range(na.omit(c(unlist(subListExtract(allithso2,"pred")),unlist(allobso2))))}else{zlimp=zlimo}
   
-  if(is.null(fromp)==T){fromp=min(na.omit(unlist(allobsp2)))}else{fromp=fromp}
-  if(is.null(fromo)==T){fromo=min(na.omit(unlist(allobso2)))}else{fromo=zlimo}
+  if(is.null(fromp)==T){fromp=min(na.omit(c(unlist(subListExtract(allithsp2,"pred")),unlist(allobsp2))))}else{fromp=fromp}
+  if(is.null(fromo)==T){fromo=min(na.omit(c(unlist(subListExtract(allithso2,"pred")),unlist(allobso2))))}else{fromo=zlimo}
   
-  if(is.null(top)==T){top=max(na.omit(unlist(allobsp2)))}else{top=top}
-  if(is.null(too)==T){too=max(na.omit(unlist(allobso2)))}else{too=too}
+  if(is.null(top)==T){top=max(na.omit(c(unlist(subListExtract(allithsp2,"pred")),unlist(allobsp2))))}else{top=top}
+  if(is.null(too)==T){too=max(na.omit(c(unlist(subListExtract(allithso2,"pred")),unlist(allobso2))))}else{too=too}
   
   
   
@@ -107,15 +109,17 @@ replotontraj<-function(ontrajplotobject,zlimp=NULL,zlimo=NULL,fromp=NULL,top=NUL
     open3d(windowRect=c(100,100,1000,1000)) 
     mfrow3d(nlevels(factorord),z+1,sharedMouse = T,byrow=T)
     for(i in 1:length(serfac2)){
+      plot3d(themaxt*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       meshDist(allithsp2[[i]]$obm$colMesh,distvec=allobsp2[[i]],from=fromp,to=top,scaleramp=scaleramp,add=T,alpha=alphas[i])
-      text3d(0,0,0,rep(levels(factorord),each=(z+1))[i],alpha=alphas2[i],add=T)
+      text3d(0,0,0,rep(levels(factorord),each=(z+1))[i],alpha=alphas2[i],add=T,cex=levelcex3d)
       if(i<length(serfac2)){next3d()}
     }
     open3d(windowRect=c(100,100,1000,1000)) 
     mfrow3d(nlevels(factorord),z+1,sharedMouse = T,byrow=T)
     for(i in 1:length(serfac2)){
+      plot3d(themaxo*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       meshDist(allithso2[[i]]$obm$colMesh,distvec=allobso2[[i]],from=fromo,to=too,scaleramp=scaleramp,add=T,alpha=alphas[i])
-      text3d(0,0,0,rep(levels(factorord),each=(z+1))[i],alpha=alphas2[i],add=T)
+      text3d(0,0,0,rep(levels(factorord),each=(z+1))[i],alpha=alphas2[i],add=T,cex=levelcex3d)
       if(i<length(serfac2)){next3d()}
     }
   }
@@ -128,7 +132,7 @@ replotontraj<-function(ontrajplotobject,zlimp=NULL,zlimo=NULL,fromp=NULL,top=NUL
       plot3d(traspred2[,,i],bbox=F,type="s",asp=F,alpha=alphas[i],axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
       if(is.null(links)==F){if(i%in%c(1:length(serfac2))[firstsfac(serfac2)]){plot3d(themaxt*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F,add=T)}else{lineplot(traspred2[,,i],links)}}
       if(is.null(triang)==F){shade3d(plotsurf(traspred2[,,i],t(triang),plot=F),add=T,alpha=alphas[i]*0.5,col=2)}
-      text3d(0,0,0,rep(levels(factorord),each=(z+1))[i],alpha=alphas2[i],add=T)
+      text3d(0,0,0,rep(levels(factorord),each=(z+1))[i],alpha=alphas2[i],add=T,cex=levelcex3d)
       if(i<length(serfac2)){next3d()}
     }
     open3d(windowRect=c(100,100,1000,1000)) 
@@ -138,7 +142,7 @@ replotontraj<-function(ontrajplotobject,zlimp=NULL,zlimo=NULL,fromp=NULL,top=NUL
       plot3d(origpred2[,,i],bbox=F,type="s",asp=F,alpha=alphas[i],axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
       if(is.null(links)==F){if(i%in%c(1:length(serfac2))[firstsfac(serfac2)]){plot3d(themaxo*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F,add=T)}else{lineplot(origpred2[,,i],links)}}
       if(is.null(triang)==F){shade3d(plotsurf(origpred2[,,i],t(triang),plot=F),add=T,alpha=alphas[i]*0.5,col=2)}
-      text3d(0,0,0,rep(levels(factorord),each=(z+1))[i],alpha=alphas2[i],add=T)
+      text3d(0,0,0,rep(levels(factorord),each=(z+1))[i],alpha=alphas2[i],add=T,cex=levelcex3d)
       if(i<length(serfac2)){next3d()}
     }
   }
@@ -162,7 +166,7 @@ replotontraj<-function(ontrajplotobject,zlimp=NULL,zlimo=NULL,fromp=NULL,top=NUL
       par(mfrow=c(nlevels(factorord),z+1))
       par(mar=mar,mai=mai,oma=oma)
       for(i in 1:length(serfac2)){
-        tpsgridpaolo(traspred2[,,1],traspred2[,,i],xlim=range(themaxt[,1]),ylim=range(themaxt[,2]),collandsTT=alphas[i],collandsYY=alphas[i],pch=19,cex=0.5,displ=F,axes2d=F,mag=mag,colgrid=makeTransparent(1,alpha=alphas[i]))
+        tpsgridpaolo(traspred2[,,1],traspred2[,,i],xlim=range(themaxt[,1]),ylim=range(themaxt[,2]),collandsTT=alphas[i],collandsYY=alphas[i],pch=19,cex=0.5,displ=F,axes2d=F,mag=mag,colgrid=makeTransparent(1,alpha=alphas[i]),ext=exts2[i])
         if(!is.null(links)){lineplot(traspred2[,,i],links,col=alphas[i])}
         if(linkss==T){lineplot(traspred2[,,1],links,lwd=lwds,col=makeTransparent(linksscol,alpha=alphas[i]))}
         text(0,0,rep(levels(factorord),each=(z+1))[i],col=makeTransparent(1,alpha=alphas2[i]),cex=levelcex2d)
@@ -189,7 +193,7 @@ replotontraj<-function(ontrajplotobject,zlimp=NULL,zlimo=NULL,fromp=NULL,top=NUL
       par(mar=mar,mai=mai,oma=oma)
       for(i in 1:nlevels(serfac2)){
         for(j in 1:table(serfac2)[i]){
-          tpsgridpaolo(origpred2[,,as.numeric(serfac2)==i][,,1],origpred2[,,as.numeric(serfac2)==i][,,j],xlim=range(themaxt[,1]),ylim=range(themaxt[,2]),collandsTT=alphas[as.numeric(serfac2)==i][j],collandsYY=alphas[i],pch=19,cex=0.5,displ=F,axes2d=F,mag=mag,colgrid=makeTransparent(1,alpha=alphas[as.numeric(serfac2)==i][j]))
+          tpsgridpaolo(origpred2[,,as.numeric(serfac2)==i][,,1],origpred2[,,as.numeric(serfac2)==i][,,j],xlim=range(themaxt[,1]),ylim=range(themaxt[,2]),collandsTT=alphas[as.numeric(serfac2)==i][j],collandsYY=alphas[i],pch=19,cex=0.5,displ=F,axes2d=F,mag=mag,colgrid=makeTransparent(1,alpha=alphas[as.numeric(serfac2)==i][j]),ext=exts2[as.numeric(serfac2)==i][j])
           if(!is.null(links)){lineplot(origpred2[,,as.numeric(serfac2)==i][,,j],links,col=alphas[as.numeric(serfac2)==i][j])}
           if(linkss==T){lineplot(origpred2[,,as.numeric(serfac2)==i][,,1],links,lwd=lwds,col=makeTransparent(linksscol,alpha=alphas[as.numeric(serfac2)==i][j]))}
           text(0,0,rep(levels(factorord),each=(z+1))[as.numeric(serfac2)==i][j],col=makeTransparent(1,alpha=alphas2[as.numeric(serfac2)==i][j]),cex=levelcex2d)
