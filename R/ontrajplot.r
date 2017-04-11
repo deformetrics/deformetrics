@@ -90,8 +90,9 @@
 #' replotontraj(ontra33)##replot rapidly the object
 #' }
 #' @export 
-ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T,linksscol=2,lwdt=1,lwds=1,scaleramp=F,heatcolors=c("blue4","cyan2","yellow","red4"),polyn=1,mar=c(0.3,0.3,0.3,0.3),mai=c(0,0,0.3,0),oma=c(0,0,3,0),mag=1,levelcex2d=1){
+ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T,linksscol=2,lwdt=1,lwds=1,scaleramp=F,heatcolors=c("blue4","cyan2","yellow","red4"),polyn=1,mar=c(0.3,0.3,0.3,0.3),mai=c(0,0,0.3,0),oma=c(0,0,3,0),mag=1,levelcex2d=1,levelcex3d=1,exts=NULL){
   if(is.null(triang)==F){if(ncol(triang)>3){stop("I need triangulation as nx3 matrix")}}
+  
   
   traspred<-NULL
   origpred<-NULL
@@ -105,9 +106,8 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
   origpred<-read.inn(origpred,objptau$k,objptau$m)
   serfac<-factor(rep(levels(objptau$factorord),each=z))
   serfac<-factor(serfac,levels=unique(serfac))
+  if(is.null(exts)==T){exts<-rep(0.5,length(serfac))}else{exts=exts}
   
-  themaxt<-traspred[,,lastsfac(serfac)][,,which.max(apply(traspred[,,lastsfac(serfac)],3,cSize))]
-  themaxo<-origpred[,,lastsfac(serfac)][,,which.max(apply(origpred[,,lastsfac(serfac)],3,cSize))]
   
   
   traspred2<-NULL
@@ -125,10 +125,18 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
   alphas[firstsfac(serfac2)]<-0
   alphas2<-rep(0,length(serfac2))
   alphas2[firstsfac(serfac2)]<-1
+  if(is.null(exts)==T){exts2<-rep(0.5,length(serfac2))}else{
+    exts2<-NULL
+    for(i in 1:nlevels(serfac)){
+      exts2i<-c(exts[as.numeric(serfac)==i][1],exts[as.numeric(serfac)==i])
+      exts2<-c(exts2,exts2i)
+    }
+  }
   
   
   
   if(objptau$m>2&heat==T){
+    
     if(is.null(triang)==T){stop("Heatmap in 3D requires triangulation")}
     allobsp<-NULL
     allithsp<-NULL
@@ -139,6 +147,11 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
       allobsp<-c(allobsp,list(allobspi))
       print(i)
     }
+    
+    allshapest<-abind::abind(list2array(subListExtract(allithsp,"mate2")),list2array(subListExtract(allithsp,"mate")))
+    themaxt<-allshapest[,,which.max(apply(allshapest,3,cSize))]
+    
+    
     
     allobso<-NULL
     allithso<-NULL
@@ -151,6 +164,10 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
         print(paste(i,j,sep="_"))
       }
     }
+    
+    allshapeso<-abind::abind(list2array(subListExtract(allithso,"mate2")),list2array(subListExtract(allithso,"mate")))
+    themaxo<-allshapeso[,,which.max(apply(allshapeso,3,cSize))]
+    
     
     allobsp2<-NULL
     allithsp2<-NULL
@@ -173,20 +190,26 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
     open3d(windowRect=c(100,100,1000,1000)) 
     mfrow3d(nlevels(objptau$factorord),z+1,sharedMouse = T,byrow=T)
     for(i in 1:length(serfac2)){
+      plot3d(themaxt*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       meshDist(allithsp2[[i]]$obm$colMesh,distvec=allobsp2[[i]],from=min(unlist(allobsp2)),to=max(unlist(allobsp2)),scaleramp=scaleramp,add=T,alpha=alphas[i])
-      text3d(0,0,0,rep(levels(objptau$factorord),each=(z+1))[i],alpha=alphas2[i],add=T)
+      text3d(0,0,0,rep(levels(objptau$factorord),each=(z+1))[i],alpha=alphas2[i],add=T,cex=levelcex3d)
       if(i<length(serfac2)){next3d()}
     }
     open3d(windowRect=c(100,100,1000,1000)) 
     mfrow3d(nlevels(objptau$factorord),z+1,sharedMouse = T,byrow=T)
     for(i in 1:length(serfac2)){
+      plot3d(themaxo*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       meshDist(allithso2[[i]]$obm$colMesh,distvec=allobso2[[i]],from=min(unlist(allobso2)),to=max(unlist(allobso2)),scaleramp=scaleramp,add=T,alpha=alphas[i])
-      text3d(0,0,0,rep(levels(objptau$factorord),each=(z+1))[i],alpha=alphas2[i],add=T)
+      text3d(0,0,0,rep(levels(objptau$factorord),each=(z+1))[i],alpha=alphas2[i],add=T,cex=levelcex3d)
       if(i<length(serfac2)){next3d()}
     }
   }
   
   if(objptau$m>2&heat==F){
+    themaxt<-traspred[,,which.max(apply(traspred,3,cSize))]
+    themaxo<-origpred[,,which.max(apply(origpred,3,cSize))]
+    
+    
     open3d(windowRect=c(100,100,1000,1000)) 
     mfrow3d(nlevels(objptau$factorord),z+1,sharedMouse = T,byrow=T)
     for(i in 1:length(serfac2)){
@@ -194,7 +217,7 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
       plot3d(traspred2[,,i],bbox=F,type="s",asp=F,alpha=alphas[i],axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
       if(is.null(links)==F){if(i%in%c(1:length(serfac2))[firstsfac(serfac2)]){plot3d(themaxt*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F,add=T)}else{lineplot(traspred2[,,i],links)}}
       if(is.null(triang)==F){shade3d(plotsurf(traspred2[,,i],t(triang),plot=F),add=T,alpha=alphas[i]*0.5,col=2)}
-      text3d(0,0,0,rep(levels(objptau$factorord),each=(z+1))[i],alpha=alphas2[i],add=T)
+      text3d(0,0,0,rep(levels(objptau$factorord),each=(z+1))[i],alpha=alphas2[i],add=T,cex=levelcex3d)
       if(i<length(serfac2)){next3d()}
     }
     open3d(windowRect=c(100,100,1000,1000)) 
@@ -204,7 +227,7 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
       plot3d(origpred2[,,i],bbox=F,type="s",asp=F,alpha=alphas[i],axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
       if(is.null(links)==F){if(i%in%c(1:length(serfac2))[firstsfac(serfac2)]){plot3d(themaxo*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F,add=T)}else{lineplot(origpred2[,,i],links)}}
       if(is.null(triang)==F){shade3d(plotsurf(origpred2[,,i],t(triang),plot=F),add=T,alpha=alphas[i]*0.5,col=2)}
-      text3d(0,0,0,rep(levels(objptau$factorord),each=(z+1))[i],alpha=alphas2[i],add=T)
+      text3d(0,0,0,rep(levels(objptau$factorord),each=(z+1))[i],alpha=alphas2[i],add=T,cex=levelcex3d)
       if(i<length(serfac2)){next3d()}
     }
   }
@@ -212,6 +235,9 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
   
   if(objptau$m<3){
     if(heat==F&grid2d==F){
+      themaxt<-traspred[,,which.max(apply(traspred,3,cSize))]
+      themaxo<-origpred[,,which.max(apply(origpred,3,cSize))]
+      
       par(mfrow=c(nlevels(objptau$factorord),z+1))
       par(mar=mar,mai=mai,oma=oma)
       for(i in 1:length(serfac2)){
@@ -225,10 +251,13 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
       
     }
     if(heat==F&grid2d==T){  
+      themaxt<-traspred[,,which.max(apply(traspred,3,cSize))]*mag
+      themaxo<-origpred[,,which.max(apply(origpred,3,cSize))]*mag
+      
       par(mfrow=c(nlevels(objptau$factorord),z+1))
       par(mar=mar,mai=mai,oma=oma)
       for(i in 1:length(serfac2)){
-        tpsgridpaolo(traspred2[,,1],traspred2[,,i],xlim=range(themaxt[,1]),ylim=range(themaxt[,2]),collandsTT=alphas[i],collandsYY=alphas[i],pch=19,cex=0.5,displ=F,axes2d=F,mag=mag,colgrid=makeTransparent(1,alpha=alphas[i]))
+        tpsgridpaolo(traspred2[,,1],traspred2[,,i],xlim=range(themaxt[,1]),ylim=range(themaxt[,2]),collandsTT=alphas[i],collandsYY=alphas[i],pch=19,cex=0.5,displ=F,axes2d=F,mag=mag,colgrid=makeTransparent(1,alpha=alphas[i]),ext=exts2[i])
         if(!is.null(links)){lineplot(traspred2[,,i],links,col=alphas[i])}
         if(linkss==T){lineplot(traspred2[,,1],links,lwd=lwds,col=makeTransparent(linksscol,alpha=alphas[i]))}
         text(0,0,rep(levels(objptau$factorord),each=(z+1))[i],col=makeTransparent(1,alpha=alphas2[i]),cex=levelcex2d)
@@ -238,6 +267,9 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
     }
     
     if(heat==F&grid2d==F){
+      themaxt<-traspred[,,which.max(apply(traspred,3,cSize))]
+      themaxo<-origpred[,,which.max(apply(origpred,3,cSize))]
+      
       par(mfrow=c(nlevels(objptau$factorord),z+1))
       par(mar=mar,mai=mai,oma=oma)
       for(i in 1:nlevels(serfac2)){
@@ -251,11 +283,14 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
       title(main="Ontogenetic trajectories of original per-group predictions at equally spaced size values within per-group ranges",outer=T)
     }
     if(heat==F&grid2d==T){  
+      themaxt<-traspred[,,which.max(apply(traspred,3,cSize))]*mag
+      themaxo<-origpred[,,which.max(apply(origpred,3,cSize))]*mag
+      
       par(mfrow=c(nlevels(objptau$factorord),z+1))
       par(mar=mar,mai=mai,oma=oma)
       for(i in 1:nlevels(serfac2)){
         for(j in 1:table(serfac2)[i]){
-          tpsgridpaolo(origpred2[,,as.numeric(serfac2)==i][,,1],origpred2[,,as.numeric(serfac2)==i][,,j],xlim=range(themaxt[,1]),ylim=range(themaxt[,2]),collandsTT=alphas[as.numeric(serfac2)==i][j],collandsYY=alphas[i],pch=19,cex=0.5,displ=F,axes2d=F,mag=mag,colgrid=makeTransparent(1,alpha=alphas[as.numeric(serfac2)==i][j]))
+          tpsgridpaolo(origpred2[,,as.numeric(serfac2)==i][,,1],origpred2[,,as.numeric(serfac2)==i][,,j],xlim=range(themaxt[,1]),ylim=range(themaxt[,2]),collandsTT=alphas[as.numeric(serfac2)==i][j],collandsYY=alphas[i],pch=19,cex=0.5,displ=F,axes2d=F,mag=mag,colgrid=makeTransparent(1,alpha=alphas[as.numeric(serfac2)==i][j]),ext=exts2[as.numeric(serfac2)==i][j])
           if(!is.null(links)){lineplot(origpred2[,,as.numeric(serfac2)==i][,,j],links,col=alphas[as.numeric(serfac2)==i][j])}
           if(linkss==T){lineplot(origpred2[,,as.numeric(serfac2)==i][,,1],links,lwd=lwds,col=makeTransparent(linksscol,alpha=alphas[as.numeric(serfac2)==i][j]))}
           text(0,0,rep(levels(objptau$factorord),each=(z+1))[as.numeric(serfac2)==i][j],col=makeTransparent(1,alpha=alphas2[as.numeric(serfac2)==i][j]),cex=levelcex2d)
@@ -269,7 +304,7 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
       allobsp<-NULL
       allithsp<-NULL
       for(i in 1:length(serfac)){
-        ithp<-heat2d(objptau$CR,traspred[,,i],linkss=links,graphics=F,zlim=NULL,colors=heatcolors,mag=mag)
+        ithp<-heat2d(objptau$CR,traspred[,,i],linkss=links,graphics=F,zlim=NULL,colors=heatcolors,mag=mag,ext=exts[i])
         allithsp<-c(allithsp,list(ithp))
         allobspi<-ithp$obs
         allobsp<-c(allobsp,list(allobspi))
@@ -280,13 +315,19 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
       allithso<-NULL
       for(i in 1:nlevels(serfac)){
         for(j in 1:table(serfac)[i]){
-          itho<-heat2d(origpred[,,as.numeric(serfac)==i][,,1],origpred[,,as.numeric(serfac)==i][,,j],linkss=links,graphics=F,zlim=NULL,colors=heatcolors,mag=mag)
+          itho<-heat2d(origpred[,,as.numeric(serfac)==i][,,1],origpred[,,as.numeric(serfac)==i][,,j],linkss=links,graphics=F,zlim=NULL,colors=heatcolors,mag=mag,ext=exts[i])
           allithso<-c(allithso,list(itho))
           allobsoi<-itho$obs
           allobso<-c(allobso,list(allobsoi))
           print(paste(i,j,sep="_"))
         }
       }
+      
+      allshapest<-abind::abind(list2array(subListExtract(allithsp,"mate2")),list2array(subListExtract(allithsp,"mate")))
+      themaxt<-allshapest[,,which.max(apply(allshapest,3,cSize))]
+      
+      allshapeso<-abind::abind(list2array(subListExtract(allithso,"mate2")),list2array(subListExtract(allithso,"mate")))
+      themaxo<-allshapeso[,,which.max(apply(allshapeso,3,cSize))]
       
       allobsp2<-NULL
       allithsp2<-NULL
@@ -311,7 +352,7 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
       par(mar=mar,mai=mai,oma=oma)
       for(i in 1:length(serfac2)){
         if(i%in%c(1:length(serfac2))[firstsfac(serfac2)]){plot(allithsp2[[i]]$mate,bty="n",cex=0,asp=1,xlab="",ylab="",xaxt="n",yaxt="n",xlim=range(themaxt[,1]),ylim=range(themaxt[,2]))}else{
-          image.plot(xyz2img(cbind(allithsp2[[i]]$interpcoords,allithsp2[[i]]$pred),tolerance=allithsp2[[i]]$tol),zlim=range(na.omit(unlist(allobsp2))),asp=1,xlim=range(themaxt[,1]),ylim=range(themaxt[,2]),col=allithsp2[[i]]$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="")  
+          image.plot(xyz2img(cbind(allithsp2[[i]]$interpcoords,allithsp2[[i]]$pred),tolerance=allithsp2[[i]]$tol),zlim=range(na.omit(c(allithsp2[[i]]$pred,unlist(allobsp2)))),asp=1,xlim=range(themaxt[,1]),ylim=range(themaxt[,2]),col=allithsp2[[i]]$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="")  
           par(new=T)
           plot(allithsp2[[i]]$mate,xlim=range(themaxt[,1]),ylim=range(themaxt[,2]),asp=1,pch=19,cex=1,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
           if(is.null(links)==F){lineplot(allithsp2[[i]]$mate,links)}
@@ -330,7 +371,7 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
       par(mar=mar,mai=mai,oma=oma)
       for(i in 1:length(serfac2)){
         if(i%in%c(1:length(serfac2))[firstsfac(serfac2)]){plot(allithso2[[i]]$mate,bty="n",cex=0,asp=1,xlab="",ylab="",xaxt="n",yaxt="n",xlim=range(themaxt[,1]),ylim=range(themaxt[,2]))}else{
-          image.plot(xyz2img(cbind(allithso2[[i]]$interpcoords,allithso2[[i]]$pred),tolerance=allithso2[[i]]$tol),zlim=range(na.omit(unlist(allobso2))),asp=1,xlim=range(themaxo[,1]),ylim=range(themaxo[,2]),col=allithso2[[i]]$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="")  
+          image.plot(xyz2img(cbind(allithso2[[i]]$interpcoords,allithso2[[i]]$pred),tolerance=allithso2[[i]]$tol),zlim=range(na.omit(c(allithso2[[i]]$pred,unlist(allobso2)))),asp=1,xlim=range(themaxo[,1]),ylim=range(themaxo[,2]),col=allithso2[[i]]$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="")  
           par(new=T)
           plot(allithso2[[i]]$mate,xlim=range(themaxt[,1]),ylim=range(themaxt[,2]),asp=1,pch=19,cex=1,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
           if(is.null(links)==F){lineplot(allithso2[[i]]$mate,links)}
@@ -354,7 +395,8 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
     allobso2<-NULL
     allithso<-NULL
     allithso2<-NULL
-    }
-  out<-list(factorord=objptau$factorord,z=z,m=objptau$m,links=links,triang=triang,linkss=linkss,heat=heat,grid2d=grid2d,traspred=traspred, origpred=origpred, serfac=serfac, themaxt=themaxt,themaxo=themaxo,traspred2=traspred2,origpred2=origpred2,serfac2=serfac2,alphas=alphas,alphas2=alphas2,allobsp=allobsp,allithsp=allithsp,allobso=allobso,allithso=allithso,allobsp2=allobsp2,allithsp2=allithsp2,allobso2=allobso2,allithso2=allithso2)
+  }
+  out<-list(factorord=objptau$factorord,z=z,m=objptau$m,links=links,triang=triang,linkss=linkss,heat=heat,grid2d=grid2d,traspred=traspred, origpred=origpred, serfac=serfac, themaxt=themaxt,themaxo=themaxo,traspred2=traspred2,origpred2=origpred2,serfac2=serfac2,alphas=alphas,alphas2=alphas2,allobsp=allobsp,allithsp=allithsp,allobso=allobso,allithso=allithso,allobsp2=allobsp2,allithsp2=allithsp2,allobso2=allobso2,allithso2=allithso2,exts=exts,exts2=exts2)
   out
 }
+
