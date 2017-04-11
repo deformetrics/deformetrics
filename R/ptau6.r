@@ -33,10 +33,9 @@
 #' }
 #' @export
 
+
 ptau6<-function(array,factor,CSinit=T,sepure=F,polyn=1,CR=NULL,locs=NULL,perm=999){
-  library(Morpho)
-  library(shapes)
-  library(vegan)
+
   warning("WARNING: this function reorders data (if they are not) in increasing size order within each level")
   k<-dim(array)[1]
   m<-dim(array)[2]
@@ -51,7 +50,7 @@ ptau6<-function(array,factor,CSinit=T,sepure=F,polyn=1,CR=NULL,locs=NULL,perm=99
   
   depepure<-array2mat(procSym(newarray,pcAlign=F,CSinit=CSinit,scale=F)$orpdata,n,k*m)
   if(sepure==T){depepure<-array2mat(sepgpa(newarray,factor,CSinit=CSinit,scale=F)$mountedorpdata,n,k*m)}
-  indepepure<-centroid.size(newarray)
+  indepepure<-apply(newarray,3,cSize)
   print("Individual multivariate (linear) regression between shape and size" )
   print(manymultgr(depepure,indepepure,factor,steps=perm))
   print("Pairwise *linear* mancova p-values on original data") 
@@ -109,3 +108,5 @@ if(is.null(locs)==T){locs<-mypredictpure[,,firstsfac(factor)]}else{locs<-locs}
   
   out<-list(k=k,m=m,n=n,arrayord=newarray,factorord=factor,CR=CR,locs=locs,depepure=depepure,indepepure=indepepure,thelmlistpure=thelmlistpure,predictpure=mypredictpure,residpure=myresidpure,shifted=array2mat(prls$transported,n,k*m),thelmlistpure2=thelmlistpure2,predictpure2=array2mat(prls$transported,n,k*m),predictpure3=mypredictpure2,residpure2=myresidpure2,space1=space1,origtrasp=array2mat(origtrasp,n,k*m),origproj=origproj,space1mshape=space1mshape)                                   
 }
+
+
