@@ -77,6 +77,7 @@
 #' data(sur_fac)
 #' data(sur_bas)
 #' data(my2d)
+#' library(rgl)
 #' data=pri3d
 #' my3d<-centershapes(data)
 #' amy3d<-procSym(my3d)
