@@ -65,6 +65,7 @@
 #' animdefo(amy2d$mshape,list(regr$seqshapes),czlim=F,czlimw=T,a=0.01,linkss=linksdors,linkst=linksdors,axtit=myaxtits,magrange=1.5)
 #' }
 #' @export
+
 animdefo<-function(mshape,seqlist,suffix="anim",czlim=T,czlimw=F,linkss=NULL,linkst=NULL,colss=1,colst=2,lwds=2,lwdt=2,cexs=0,cext=0,displ=F,axtit=NULL,mag=1,heat=T,mar=c(0,0,0.3,0),mai=c(0,0,0.3,0),oma=c(0,0,3,0),colors=c("blue4","cyan2","yellow","red4"),alpha=1,magrange=1,exts=NULL,PB=NA,PA=NA,S=NA,SB=NA,H=NA,V=3,a=NULL,q=NULL,Y=FALSE,j=FALSE,D=FALSE,St=Inf,Q=TRUE,constr=T,pholes=NA){
   allshapes<-NULL
   for(i in 1:length(seqlist)){
