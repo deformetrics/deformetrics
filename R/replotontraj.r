@@ -90,15 +90,19 @@ replotontraj<-function(ontrajplotobject,zlimp=NULL,zlimo=NULL,fromp=NULL,top=NUL
   exts<-ontrajplotobject$exts
   ext2<-ontrajplotobject$exts2
   
+if(m<3){
   if(is.null(zlimp)==T){zlimp=range(na.omit(c(unlist(subListExtract(allithsp2,"pred")),unlist(allobsp2))))}else{zlimp=zlimp}
   if(is.null(zlimo)==T){zlimo=range(na.omit(c(unlist(subListExtract(allithso2,"pred")),unlist(allobso2))))}else{zlimp=zlimo}
+}
+
+if(m>2){
   
-  if(is.null(fromp)==T){fromp=min(na.omit(c(unlist(subListExtract(allithsp2,"pred")),unlist(allobsp2))))}else{fromp=fromp}
-  if(is.null(fromo)==T){fromo=min(na.omit(c(unlist(subListExtract(allithso2,"pred")),unlist(allobso2))))}else{fromo=zlimo}
+  if(is.null(fromp)==T){fromp=min(na.omit(c(unlist(subListExtract(allithsp2,"obs")),unlist(allobsp2))))}else{fromp=fromp}
+  if(is.null(fromo)==T){fromo=min(na.omit(c(unlist(subListExtract(allithso2,"obs")),unlist(allobso2))))}else{fromo=fromo}
   
-  if(is.null(top)==T){top=max(na.omit(c(unlist(subListExtract(allithsp2,"pred")),unlist(allobsp2))))}else{top=top}
-  if(is.null(too)==T){too=max(na.omit(c(unlist(subListExtract(allithso2,"pred")),unlist(allobso2))))}else{too=too}
-  
+  if(is.null(top)==T){top=max(na.omit(c(unlist(subListExtract(allithsp2,"obs")),unlist(allobsp2))))}else{top=top}
+  if(is.null(too)==T){too=max(na.omit(c(unlist(subListExtract(allithso2,"obs")),unlist(allobso2))))}else{too=too}
+  }
   
   
   
