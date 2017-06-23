@@ -33,9 +33,10 @@
 #' }
 #' @export
 
-
 ptau6<-function(array,factor,CSinit=T,sepure=F,polyn=1,CR=NULL,locs=NULL,perm=999){
-
+  library(Morpho)
+  library(shapes)
+  library(vegan)
   warning("WARNING: this function reorders data (if they are not) in increasing size order within each level")
   k<-dim(array)[1]
   m<-dim(array)[2]
@@ -71,10 +72,10 @@ ptau6<-function(array,factor,CSinit=T,sepure=F,polyn=1,CR=NULL,locs=NULL,perm=99
   mypredictpure<-read.inn(mypredictpure,k,m)
   myresidpure<-read.inn(myresidpure,k,m)
   
-
-if(is.null(CR)==T){CR<-procSym(mypredictpure[,,firstsfac(factor)],scale=F,pcAlign=F,reflect=F,CSinit=F)$mshape}else{CR<-CR}
-if(is.null(locs)==T){locs<-mypredictpure[,,firstsfac(factor)]}else{locs<-locs}
-
+  
+  if(is.null(CR)==T){CR<-procSym(mypredictpure[,,firstsfac(factor)],scale=F,pcAlign=F,reflect=F,CSinit=F)$mshape}else{CR<-CR}
+  if(is.null(locs)==T){locs<-mypredictpure[,,firstsfac(factor)]}else{locs<-locs}
+  
   prls<-lshift2(mypredictpure,factor,CSinit=CSinit,CR=CR,locs=locs)
   
   common<-array2mat(procSym(newarray,pcAlign=,scale=F,CSinit=CSinit)$orpdata,n,k*m)
@@ -88,14 +89,14 @@ if(is.null(locs)==T){locs<-mypredictpure[,,firstsfac(factor)]}else{locs<-locs}
   print("Pairwise multivariate (linear) regression between shape of transported data and size" )
   print(pwpermancova(array2mat(origtrasp,n,k*m),indepepure,factor,nperm=perm)$p_adonis_pred1_pred2)
   depepure2<-origtrasp
-  
   print("Individual multivariate (linear) regression between shape of transported data and size" )
   print(manymultgr(array2mat(depepure2,n,k*m),indepepure,factor,steps=perm))
-  
   thedatapure2<-data.frame(indepure2=indepepure,depure2=array2mat(depepure2,n,k*m))
   thelmlistpure2<-NULL
   mypredictpure2<-NULL
   myresidpure2<-NULL
+  eqpredtrasp<-NULL
+  eqsizes<-NULL
   for(i in 1:nlevels(factor)){
     thelmpure2i<-lm(as.matrix(thedatapure2[,-1][as.numeric(factor)==i,])~poly(indepure2[as.numeric(factor)==i],degree=polyn,raw=TRUE),data=thedatapure2)
     mypredictpure2i<-predict(thelmpure2i)
@@ -103,10 +104,14 @@ if(is.null(locs)==T){locs<-mypredictpure[,,firstsfac(factor)]}else{locs<-locs}
     thelmlistpure2<-c(thelmlistpure2,list(thelmpure2i))
     mypredictpure2<-rbind(mypredictpure2,mypredictpure2i)
     myresidpure2<-rbind(myresidpure2,myresidpure2i)
+    eqpredtraspi<-serpred(array2mat(depepure2,n,k*m)[as.numeric(factor)==i,],indepepure[as.numeric(factor)==i],polyn=polyn)
+    eqpredtrasp<-rbind(eqpredtrasp,eqpredtraspi)
+    eqsizesi<-seq(min(indepepure[as.numeric(factor)==i]),max(indepepure[as.numeric(factor)==i]),length.out=10)
+    eqsizes<-c(eqsizes,eqsizesi)
   }
+  eqpredtrasp<-read.inn(eqpredtrasp,k,m)
   
-  
-  out<-list(k=k,m=m,n=n,arrayord=newarray,factorord=factor,CR=CR,locs=locs,depepure=depepure,indepepure=indepepure,thelmlistpure=thelmlistpure,predictpure=mypredictpure,residpure=myresidpure,shifted=array2mat(prls$transported,n,k*m),thelmlistpure2=thelmlistpure2,predictpure2=array2mat(prls$transported,n,k*m),predictpure3=mypredictpure2,residpure2=myresidpure2,space1=space1,origtrasp=array2mat(origtrasp,n,k*m),origproj=origproj,space1mshape=space1mshape)                                   
+  out<-list(k=k,m=m,n=n,arrayord=newarray,factorord=factor,CR=CR,locs=locs,depepure=depepure,indepepure=indepepure,thelmlistpure=thelmlistpure,predictpure=mypredictpure,residpure=myresidpure,shifted=array2mat(prls$transported,n,k*m),thelmlistpure2=thelmlistpure2,predictpure2=array2mat(prls$transported,n,k*m),predictpure3=mypredictpure2,residpure2=myresidpure2,space1=space1,origtrasp=array2mat(origtrasp,n,k*m),origproj=origproj,space1mshape=space1mshape,eqpredtrasp=eqpredtrasp,eqsizes=eqsizes,sizerange=aggregate(indepepure,by=list(factor),range))                                   
 }
 
 
