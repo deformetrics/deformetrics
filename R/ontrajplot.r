@@ -400,3 +400,4 @@ ontrajplot<-function(objptau,z=5,triang=NULL,links=NULL,heat=F,grid2d=T,linkss=T
   out
 }
 
+
