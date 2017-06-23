@@ -23,41 +23,41 @@
 #' }
 #' @export
 scoresequencearray<-function(mshape,from,to,pcn,rotation,mag=1,frames=15,type=1){
-  
-if(length(pcn)<2){
-  seqvector<-seq(from=from,to=to,length.out=frames)
-  myarray<-NULL
-  for(i in 1:length(seqvector)){
-    
-    
-    if(type==1){
-      shapeposition<-showPC(seqvector[i]*mag,rotation[,pcn],mshape)}else{shapeposition<-showPC2(seqvector[i]*mag,rotation[,pcn],mshape)}
-    
-    
-    
-    shapearr<-array(shapeposition,dim=c(nrow(shapeposition),ncol(shapeposition),1))
-    myarray<-abind::abind(myarray,shapearr)
-  }}else{
-    
-    binda<-rbind(from,to)
-    seqmatrix<-NULL
-    for(i in 1:ncol(binda)){
-      seqmatrixi<-seq(binda[1,i],binda[2,i],length.out=frames)
-      seqmatrix<-cbind(seqmatrix,seqmatrixi)
-    }
+  require(abind)
+  require(Morpho)
+  if(length(pcn)<2){
+    seqvector<-seq(from=from,to=to,length.out=frames)
     myarray<-NULL
-    for(i in 1:nrow(seqmatrix)){
+    for(i in 1:length(seqvector)){
+      
       
       if(type==1){
-        shapeposition<-showPC(seqmatrix[i,]*mag,rotation[,pcn],mshape)}else{shapeposition<-showPC(seqmatrix[i,]*mag,rotation[,pcn],mshape)}
+        shapeposition<-showPC(seqvector[i]*mag,rotation[,pcn],mshape)}else{shapeposition<-showPC2(seqvector[i]*mag,rotation[,pcn],mshape)}
       
       
       
       shapearr<-array(shapeposition,dim=c(nrow(shapeposition),ncol(shapeposition),1))
       myarray<-abind::abind(myarray,shapearr)
-    }}
-return(myarray)
-}  
-
+    }}else{
+      
+      binda<-rbind(from,to)
+      seqmatrix<-NULL
+      for(i in 1:ncol(binda)){
+        seqmatrixi<-seq(binda[1,i],binda[2,i],length.out=frames)
+        seqmatrix<-cbind(seqmatrix,seqmatrixi)
+      }
+      myarray<-NULL
+      for(i in 1:nrow(seqmatrix)){
+        
+        if(type==1){
+          shapeposition<-showPC(seqmatrix[i,]*mag,rotation[,pcn],mshape)}else{shapeposition<-showPC(seqmatrix[i,]*mag,rotation[,pcn],mshape)}
+        
+        
+        
+        shapearr<-array(shapeposition,dim=c(nrow(shapeposition),ncol(shapeposition),1))
+        myarray<-abind::abind(myarray,shapearr)
+      }}
+  return(myarray)
+}
   
   
