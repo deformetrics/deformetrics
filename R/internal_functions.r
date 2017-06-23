@@ -4,6 +4,31 @@
 #' @author Paolo Piras, Antonio Profico
 #' @export  
 
+matrix2arrayasis<-function(matrix,nland){
+  require(abind)
+  fin<-NULL
+  div<-newtypelist(nland,nrow(matrix)/nland)
+  for(i in 1:length(div)){
+    piece<-array(matrix[div[[i]],],dim=c(nland,ncol(matrix),1)) 
+    fin<-abind::abind(fin,piece)
+  }
+  return(fin)
+}
+#' export
+
+newtypelist<-function(nlevelinteger,ncolinteger){####internal function
+  mynewlist<-NULL
+  myouter<-as.vector(outer(1:ncolinteger,nlevelinteger))
+  myouter2<-(myouter-nlevelinteger)+1
+  for(i in 1:length(myouter)){
+    myveci<-list(c(myouter2[i]:myouter[i]))
+    mynewlist<-append(mynewlist,myveci)
+  }
+  mynewlist
+}
+#' export
+
+
 plot2dhull<-function(matrix,group,scalevariable=1,asp=1,extl=F,legend=T,xl=NULL,yl=NULL,posl=c("topright"),labels=NULL,clabel=0,pch=19,lwd=0.5,colhull=NULL,col=as.numeric(group),xlab=NULL,ylab=NULL,grey=F,xlimi=range(matrix[,1])*1.3,ylimi=range(matrix[,2])*1.3,reorder=T,alpha=rep(0,nlevels(group))){
   library(MASS)
   library(compositions)
