@@ -60,11 +60,11 @@
 #' block1<-procSym(my3d[1:17,,],CSinit=T,scale=F)$orpdata
 #' block2<-procSym(my3d[18:32,,],CSinit=T,scale=F)$orpdata
 #' plsgen(block1,block2,links1=linksbase,links2=linksface,commonref=T)
-#' plsgen(block1,block2,commonref=T,triang1=t(sur_bas$it),heatmap=T,triang2=t(sur_fac$it),from1=0,from2=0,to1=0.051,to2=0.051)
+#' plsgen(block1,block2,commonref=T,triang1=t(sur_bas$it),heatmap=T,triang2=t(sur_fac$it),from1=-0.3,from2=-0.3,to1=0.3,to2=0.3)
 ### Size and shape space 
 #' block1<-procSym(my3d[1:17,,],CSinit=F,scale=F)$orpdata
 #' block2<-procSym(my3d[18:32,,],CSinit=F,scale=F)$orpdata
-#' plsgen(block1,block2,commonref=T,triang1=t(sur_bas$it),heatmap=T,triang2=t(sur_fac$it),from1=0,from2=0,to1=16,to2=16)
+#' plsgen(block1,block2,commonref=T,triang1=t(sur_bas$it),heatmap=T,triang2=t(sur_fac$it),from1=-2,from2=-2,to1=1.5,to2=1.5)
 #' block1<-matrix(rnorm(1000,0,1),ncol=10)
 #' block2<-matrix(rnorm(1000,0,1),ncol=10)
 #' plsgen(block1,block2)
