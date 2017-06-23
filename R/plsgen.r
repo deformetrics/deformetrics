@@ -112,9 +112,11 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
         myhxneg<-heat2d(mshape1,plsnxneg,tol=10,nadd=5000,graphics=F,constr=T,colors=heatcolors,linkss=links1,S=S1,zlim=zlim) 
       }else{
         if(is.null(triang1)){stop("You cannot want heatmap in 3d without triangulation for block1")}
-        myhxpos<-diffonmesh(mshape1,plsnxpos,t(triang1),from=from1,to=to1,rampcolors=heatcolors,alphas=c(alpha,0.7),graph=F,scaleramp=scaleramp)
-        myhxneg<-diffonmesh(mshape1,plsnxneg,t(triang1),from=from1,to=to1,rampcolors=heatcolors,alphas=c(alpha,0.7),graph=F,scaleramp=scaleramp)
-      }
+        myhxpos<-heat3d(mshape1,plsnxpos,triang1,from=from1,to=to1,colors=heatcolors,alpha=c(0.7),graphics=F,scaleramp=scaleramp)
+        myhxneg<-heat3d(mshape1,plsnxneg,triang1,from=from1,to=to1,colors=heatcolors,alpha=c(0.7),graphics=F,scaleramp=scaleramp)
+      if(is.null(from1)){from1<-min(c(myhxpos$obs3,myhxneg$obs3))}else{from1=from1}
+      if(is.null(to1)){to1<-max(c(myhxpos$obs3,myhxneg$obs3))}else{to1=to1}
+        }
     }
     
     
@@ -133,9 +135,14 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
         myhyneg<-heat2d(mshape2,plsnyneg,tol=10,nadd=5000,graphics=F,constr=T,colors=heatcolors,linkss=links2,S=S2) 
       }else{
         if(is.null(triang2)){stop("You cannot want heatmap in 3d without triangulation for block2")}
-        myhypos<-diffonmesh(mshape2,plsnypos,t(triang2),from=from2,to=to2,rampcolors=heatcolors,alphas=c(alpha,0.7),graph=F,scaleramp=scaleramp)
-        myhyneg<-diffonmesh(mshape2,plsnyneg,t(triang2),from=from2,to=to2,rampcolors=heatcolors,alphas=c(alpha,0.7),graph=F,scaleramp=scaleramp)
-      }
+        myhypos<-heat3d(mshape2,plsnypos,triang2,from=from2,to=to2,colors=heatcolors,alpha=c(0.7),graphics=F,scaleramp=scaleramp)
+        myhyneg<-heat3d(mshape2,plsnyneg,triang2,from=from2,to=to2,colors=heatcolors,alpha=c(0.7),graphics=F,scaleramp=scaleramp)
+        
+        if(is.null(from2)){from2<-min(c(myhypos$obs3,myhyneg$obs3))}else{from2=from2}
+        if(is.null(to2)){to1<-max(c(myhypos$obs3,myhyneg$obs3))}else{to2=to2}
+        
+        
+        }
     }
     
   }else{NULL}
@@ -151,7 +158,7 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
       layout3d(mat, height = rep(c(2,1), 2), model = "inherit")
       plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       if(heatmap==T){
-        shade3d(myhxpos$obm$colMesh,alpha=alpha)
+        meshDist(myhxpos$obm$colMesh,alpha=alpha,distvec=myhxpos$obs3,from=from1,to=to1,scaleramp=scaleramp,add=T)
         if(is.null(links1)==F){lineplot(plsnxpos,links1,col=1)}
       }else{
         plot3d(plsnxpos,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
@@ -161,7 +168,7 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
       next3d()
       plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       if(heatmap==T){
-        shade3d(myhxneg$obm$colMesh,alpha=alpha)
+        meshDist(myhxneg$obm$colMesh,alpha=alpha,distvec=myhxneg$obs3,from=from1,to=to1,scaleramp=scaleramp,add=T)
         if(is.null(links1)==F){lineplot(plsnxneg,links1,col=1)}
       }else{
         plot3d(plsnxneg,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
@@ -212,7 +219,7 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
       layout3d(mat, height = rep(c(2,1), 2), model = "inherit")
       plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       if(heatmap==T){
-        shade3d(myhypos$obm$colMesh,alpha=alpha)
+        meshDist(myhypos$obm$colMesh,alpha=alpha,distvec=myhypos$obs3,from=from2,to=to2,scaleramp=scaleramp,add=T)
         if(is.null(links2)==F){lineplot(plsnypos,links2,col=1)}
       }else{
         plot3d(plsnypos,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
@@ -222,7 +229,7 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
       next3d()
       plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       if(heatmap==T){
-        shade3d(myhyneg$obm$colMesh,alpha=alpha)
+        meshDist(myhyneg$obm$colMesh,alpha=alpha,distvec=myhyneg$obs3,from=from2,to=to2,scaleramp=scaleramp,add=T)
         if(is.null(links2)==F){lineplot(plsnyneg,links2,col=1)}
       }else{
         plot3d(plsnyneg,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
@@ -277,12 +284,12 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
       }
       
       if(heatmap==T){
-        shade3d(myhxpos$obm$colMesh,alpha=alpha)
+       meshDist(myhxpos$obm$colMesh,alpha=alpha,distvec=myhxpos$obs3,from=from1,to=to1,scaleramp=scaleramp,add=T)
         if(is.null(links1)==F){lineplot(plsnxpos,links1,col=1)}
       }else{
         
-        plot3d(plsnxpos,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
-        if(is.null(links1)==F){lineplot(plsnxpos,links1,col=1)}}
+      plot3d(plsnxpos,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
+      if(is.null(links1)==F){lineplot(plsnxpos,links1,col=1)}}
       next3d()
       text3d(0,0,0, "Block1 positive")
       next3d()
@@ -290,7 +297,7 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
         plot3d(themaxx*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       }
       if(heatmap==T){
-        shade3d(myhxneg$obm$colMesh,alpha=alpha)
+        meshDist(myhxneg$obm$colMesh,alpha=alpha,distvec=myhxneg$obs3,from=from1,to=to1,scaleramp=scaleramp,add=T)
         if(is.null(links1)==F){lineplot(plsnxneg,links1,col=1)}
       }else{
         plot3d(plsnxneg,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
@@ -302,7 +309,7 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
         plot3d(themaxy*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       }
       if(heatmap==T){
-        shade3d(myhypos$obm$colMesh,alpha=alpha)
+        meshDist(myhypos$obm$colMesh,alpha=alpha,distvec=myhypos$obs3,from=from2,to=to2,scaleramp=scaleramp,add=T)
         if(is.null(links2)==F){lineplot(plsnypos,links2,col=1)}
       }else{
         plot3d(plsnypos,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
@@ -314,7 +321,7 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
         plot3d(themaxy*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       }
       if(heatmap==T){
-        shade3d(myhyneg$obm$colMesh,alpha=alpha)
+        meshDist(myhyneg$obm$colMesh,alpha=alpha,distvec=myhyneg$obs3,from=from2,to=to2,scaleramp=scaleramp,add=T)
         if(is.null(links2)==F){lineplot(plsnyneg,links2,col=1)}
       }else{
         plot3d(plsnyneg,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
@@ -331,7 +338,7 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
       layout3d(mat, height = rep(c(2,1), 2), model = "inherit")
       plot3d(themaxx*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       if(heatmap==T){
-        shade3d(myhxpos$obm$colMesh,alpha=alpha)
+        meshDist(myhxpos$obm$colMesh,alpha=alpha,distvec=myhxpos$obs3,from=from1,to=to1,scaleramp=scaleramp,add=T)
         if(is.null(links1)==F){lineplot(plsnxpos,links1,col=1)}
       }else{
         plot3d(plsnxpos,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
@@ -341,7 +348,7 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
       next3d()
       plot3d(themaxx*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       if(heatmap==T){
-        shade3d(myhxneg$obm$colMesh,alpha=alpha)
+        meshDist(myhxneg$obm$colMesh,alpha=alpha,distvec=myhxneg$obs3,from=from1,to=to1,scaleramp=scaleramp,add=T)
         if(is.null(links1)==F){lineplot(plsnxneg,links1,col=1)}
       }else{
         plot3d(plsnxneg,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
@@ -446,7 +453,7 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
       next3d()
       plot3d(themaxy*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       if(heatmap==T){
-        shade3d(myhypos$obm$colMesh,alpha=alpha)
+        meshDist(myhypos$obm$colMesh,alpha=alpha,distvec=myhypos$obs3,from=from2,to=to2,scaleramp=scaleramp,add=T)
         if(is.null(links2)==F){lineplot(plsnypos,links2,col=1)}
       }else{
         plot3d(plsnypos,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
@@ -456,7 +463,7 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
       next3d()
       plot3d(themaxy*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       if(heatmap==T){
-        shade3d(myhyneg$obm$colMesh,alpha=alpha)
+        meshDist(myhyneg$obm$colMesh,alpha=alpha,distvec=myhyneg$obs3,from=from2,to=to2,scaleramp=scaleramp,add=T)
         if(is.null(links2)==F){lineplot(plsnyneg,links2,col=1)}
       }else{
         plot3d(plsnyneg,bbox=F,type="s",asp=F,axes=F,box=F,size=0.6,xlab = "", ylab = "", zlab = "",add=T)
@@ -538,5 +545,4 @@ plsgen<-function(block1,block2,plsn=1,links1=NULL,links2=NULL,commonref=F,heatma
   if(length(out)>3){names(out)=c("pls","allxscores","allyscores","xscoresmeans","yscoresmeans")}else{NULL}
   return(out)
 }
-
 
