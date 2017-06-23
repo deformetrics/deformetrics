@@ -59,7 +59,7 @@
 #' prov2<-shaperegr(shapearray,cbind(amy3d$size,rnorm(length(indep),0,1)),links=linksentire,group=group,heatmap=T,triang=triang)
 #' }
 #' @export
-shaperegr<-function(shapearray,indep,mag=1,frames=20,links=NULL,zlim=NULL,colcca=NULL,legend=T,pchcca=NULL,lwd=2,heatmap=F,triang=NULL,group=NULL,rampcolors=c("blue4","cyan2","yellow","red4"),alpha=0.7,from=NULL,to=NULL){
+shaperegr<-function(shapearray,indep,mag=1,frames=20,links=NULL,zlim=NULL,colcca=NULL,legend=T,pchcca=NULL,lwd=2,heatmap=F,triang=NULL,group=NULL,rampcolors=c("blue4","cyan2","yellow","red4"),alpha=0.7,from=NULL,to=NULL,scaleramp=F){
   if(is.null(links)==T){links=c(1,1)}
   require(Morpho)
   require(shapes)
@@ -143,7 +143,7 @@ shaperegr<-function(shapearray,indep,mag=1,frames=20,links=NULL,zlim=NULL,colcca
     text3d(0,0,0,"At high x-values")
     if(heatmap==T){
       if(is.null(triang)==T){stop("Please input triangulation")}
-      myhxpos<-diffonmesh(shapeminindep[,,1],shapemaxindep[,,1],t(triang),from=from,to=to,rampcolors=rampcolors,alphas=c(alpha,0.7),graph=F,plotsource=F)
+      myhxpos<-diffonmesh(shapeminindep[,,1],shapemaxindep[,,1],t(triang),from=from,to=to,rampcolors=rampcolors,alphas=c(alpha,0.7),graph=F,plotsource=F,scaleramp=scaleramp)
       next3d()
       plot3d(themax*1.2,box=F,axes=F,col="white",xlab="",ylab="",zlab="",type="s",size=0,aspect=F)
       shade3d(myhxpos$obm$colMesh,alpha=alpha)
@@ -185,3 +185,4 @@ shaperegr<-function(shapearray,indep,mag=1,frames=20,links=NULL,zlim=NULL,colcca
   out<-list(predmin=shapeminindep[,,1],predmax=shapemaxindep[,,1],seqshapes=seqshapes,myseq=myseq)
   return(out)
 }
+
