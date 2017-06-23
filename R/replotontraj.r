@@ -38,11 +38,10 @@
 #' ontra20<-ontrajplot(objptau2d,links=linksdors,grid2d=F)#### just shapes
 #' ontra21<-ontrajplot(objptau2d,links=linksdors,heat=F,mag=2)#### tpsgrid
 #' replotontraj(ontra21)##replot rapidly
-#' ontra22<-ontrajplot(objptau,links=linksdors,heat=T,mag=2)#### tpsgrid and heatmap necessarily slow
+#' ontra22<-ontrajplot(objptau2d,links=linksdors,heat=T,mag=2)#### tpsgrid and heatmap necessarily slow
 #' replotontraj(ontra22,zlimo=c(-3,2)) ##replot rapidly by adjusting zlim for original per group predictions 
 #' ########  3D example
 #' data(pri3d)
-#' data(surf)
 #' data(linksbase)
 #' data(linksface)
 #' data(linksentire)
