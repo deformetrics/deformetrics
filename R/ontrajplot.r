@@ -86,6 +86,7 @@
 #' ontra32<-ontrajplot(objptau3,triang=t(sur_ent$it)) ## only meshes no heatmap
 #' replotontraj(ontra32,zlimo=c(-3,2))##replot rapidly
 #' ontra33<-ontrajplot(objptau3,triang=t(sur_ent$it),heat=T,mag=1)#### mesh with heatmap in 3D; necessarily slow: about 20 minutes
+#' library(Biobase)
 #' replotontraj(ontra33)##replot rapidly the object
 #' replotontraj(ontra33)##replot rapidly the object
 #' }
