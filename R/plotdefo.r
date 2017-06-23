@@ -202,3 +202,4 @@ plotdefo<-function(procsymobject,zlim=NULL,linkss=NULL,linkst=NULL,colss=1,colst
     }
   }
 }
+
