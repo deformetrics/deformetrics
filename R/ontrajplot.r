@@ -63,8 +63,9 @@
 #' objptau2d<-ptau6(dors4,factordors4,CSinit=T,perm=2)
 #' ontra20<-ontrajplot(objptau2d,links=linksdors,grid2d=F)#### just shapes
 #' ontra21<-ontrajplot(objptau2d,links=linksdors,heat=F,mag=2)#### tpsgrid
+#' library(Biobase)
 #' replotontraj(ontra21)##replot rapidly
-#' ontra22<-ontrajplot(objptau,links=linksdors,heat=T,mag=2)#### tpsgrid and heatmap necessarily slow
+#' ontra22<-ontrajplot(objptau2d,links=linksdors,heat=T,mag=2)#### tpsgrid and heatmap necessarily slow
 #' replotontraj(ontra22,zlimo=c(-3,2)) ##replot rapidly by adjusting zlim for original per group predictions 
 #' ########  3D example
 #' data(pri3d)
@@ -86,7 +87,6 @@
 #' ontra32<-ontrajplot(objptau3,triang=t(sur_ent$it)) ## only meshes no heatmap
 #' replotontraj(ontra32,zlimo=c(-3,2))##replot rapidly
 #' ontra33<-ontrajplot(objptau3,triang=t(sur_ent$it),heat=T,mag=1)#### mesh with heatmap in 3D; necessarily slow: about 20 minutes
-#' library(Biobase)
 #' replotontraj(ontra33)##replot rapidly the object
 #' replotontraj(ontra33)##replot rapidly the object
 #' }
