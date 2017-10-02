@@ -77,23 +77,23 @@ plotdefo<-function(procsymobject,zlim=NULL,linkss=NULL,linkst=NULL,colss=1,colst
   if(heat==F){
     ##### plot deformations associated to PC extremes; in red the Grand Mean of the gpa
     ### PC1+ 
-    tpsgridpaolo(pc1pos,mshape,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[1],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
+    tpsgridpaolo(mshape,pc1pos,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[1],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
     title(axtit[1])
     ### PC1-
-    tpsgridpaolo(pc1neg,mshape,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[2],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
+    tpsgridpaolo(mshape,pc1neg,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[2],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
     
     title(axtit[2])
     ### PC2+
-    tpsgridpaolo(pc2pos,mshape,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[3],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
+    tpsgridpaolo(mshape,pc2pos,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[3],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
     title(axtit[3])
     ### PC2-
-    tpsgridpaolo(pc2neg,mshape,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[4],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
+    tpsgridpaolo(mshape,pc2neg,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[4],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
     title(axtit[4])
     ### PC3+ 
-    tpsgridpaolo(pc3pos,mshape,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[5],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
+    tpsgridpaolo(mshape,pc3pos,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[5],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
     title(axtit[5])
     ### PC3-
-    tpsgridpaolo(pc3neg,mshape,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[6],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
+    tpsgridpaolo(mshape,pc3neg,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[6],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
     title(axtit[6])
   }else{
     
