@@ -4,6 +4,144 @@
 #' @author Paolo Piras, Antonio Profico
 #' @export  
 
+energies2d<-function(source,target,mag=1,mu1=1,mu2=1,doopa=T,links=NULL,PB=NA,PA=NA,S=NA,SB=NA,H=NA,V=3,a=NULL,q=NULL,Y=FALSE,j=FALSE,D=FALSE,St=Inf,Q=TRUE,graph=T,body=T){
+  library(shapes)
+  library(Morpho)
+  library(matrixcalc)
+  library(RTriangle)
+  library(ggm)
+  library(geometry)
+  library(tripack)
+  library(geoR)
+  library(gstat)
+  library(sp)
+  library(fields)
+  mate<-source
+  mate2<-target
+  mate2<-mate+(mate2-mate)*mag
+  if(doopa==T){
+    theopa<-rotonto(mate,mate2,scale=F,reflection=F)
+    mate<-mate
+    mate2<-theopa$yrot}
+  
+  matr<-mate
+  if(!is.null(links)&is.na(S)==T){S<-list2matrix(links)}
+  po<-areasip(matr,links=links,PB=PB,PA=PA,S=S,SB=SB,H=H,V=V,a=a,q=q,Y=Y,j=j,D=D,St=St,Q=Q)
+  ip<-po$ip
+  areas<-po$areas
+  M<-po$centros
+  myl<-tpsdry2(mate,mate2,doopa=F)
+  m<-dim(mate)[2]
+  WtY<-t(myl$W)%*%mate2
+  trace<-c(0)
+  for (i in 1:m) {
+    trace <- trace + WtY[i, i]
+  }
+  be <- (16 * pi) * trace
+  
+  ge<-gen1(mate,mate2,mu1=mu1,mu2=mu2)
+  
+  veclist<-NULL
+  for(j in 1:nrow(M)){
+    vecj<-NULL
+    for(i in 1:nrow(matr)){
+      
+      vec1ji<-2*(M[j,1]-matr[i,1])+2*(M[j,1]-matr[i,1])*log((M[j,1]-matr[i,1])^2+(M[j,2]-matr[i,2])^2)
+      vec2ji<-2*(M[j,2]-matr[i,2])+2*(M[j,2]-matr[i,2])*log((M[j,1]-matr[i,1])^2+(M[j,2]-matr[i,2])^2)
+      
+      
+      vecji<-c(vec1ji,vec2ji)
+      vecj<-rbind(vecj,vecji)
+    }
+    veclist<-c(veclist,list(vecj))
+  }
+  
+  jac<-NULL
+  for(i in 1: length(veclist)){
+    jaci<-myl$at+t(myl$W)%*%veclist[[i]]
+    jac<-c(jac,list(as.matrix(jaci)))
+  }
+  
+  deltus<-NULL
+  dpl<-NULL
+  sens<-NULL
+  for(i in 1:length(jac)){
+    deltusi<-jac[[i]]-diag(nrow(jac[[i]]))
+    dpli<-0.5*(deltusi+t(deltusi)) 
+    seni<-0.5*matrix.trace(t(as.matrix(dpli))%*%as.matrix(dpli))
+    deltus<-c(deltus,list(as.matrix(deltusi)))
+    dpl<-c(dpl,list(as.matrix(dpli)))
+    sens<-c(sens,seni)
+  }
+  
+  sens2<-sens*areas
+  
+  jac2<-list2array(jac)
+  mean11<-mean(jac2[1,1,])
+  mean12<-mean(jac2[1,2,])
+  mean21<-mean(jac2[2,1,])
+  mean22<-mean(jac2[2,2,])
+  
+  detmean<-det(matrix(c(mean11,mean21,mean12,mean22),ncol=2))
+  
+  myj<-unlist(lapply(jac,det))
+  
+  if(body==T){  
+    veclist2<-NULL
+    for(j in 1:nrow(M)){
+      vecj<-NULL
+      for(i in 1:nrow(matr)){
+        
+        vec1ji<-2+(4*(M[j,1]-matr[i,1])^2/((M[j,1]-matr[i,1])^2+(M[j,2]-matr[i,2])^2))+(2*log((M[j,1]-matr[i,1])^2+(M[j,2]-matr[i,2])^2))
+        vec2ji<-2+(4*(M[j,2]-matr[i,2])^2/((M[j,1]-matr[i,1])^2+(M[j,2]-matr[i,2])^2))+(2*log((M[j,1]-matr[i,1])^2+(M[j,2]-matr[i,2])^2))
+        vec12ji<-4*(M[j,1]-matr[i,1])*(M[j,2]-matr[i,2])/((M[j,1]-matr[i,1])^2+(M[j,2]-matr[i,2])^2)
+        
+        
+        # 
+        # vec1ji<-4*(M[j,1]-matr[i,1])^2/((M[j,1]-matr[i,1])^2+(M[j,2]-matr[i,2])^2)
+        # vec2ji<-4*(M[j,2]-matr[i,2])^2/((M[j,1]-matr[i,1])^2+(M[j,2]-matr[i,2])^2)
+        # vec12ji<-4*(M[j,1]-matr[i,1])*(M[j,2]-matr[i,2])/((M[j,1]-matr[i,1])^2+(M[j,2]-matr[i,2])^2)
+        
+        arrji<-array(matrix(c(vec1ji,vec12ji,vec12ji,vec2ji),ncol=2),dim=c(2,2,1))
+        vecj<-abind::abind(vecj,arrji)
+      }
+      veclist2<-c(veclist2,list(vecj))
+    }
+    
+    veclist2reshaped<-NULL
+    for(z in 1:length(veclist2)){
+      veclist2reshapedz<-NULL
+      for(k in 1:dim(veclist2[[z]])[[3]]){
+        veclist2reshapedzk<-c(veclist2[[z]][,,k])
+        veclist2reshapedz<-rbind(veclist2reshapedz,veclist2reshapedzk)
+      }
+      veclist2reshaped<-c(veclist2reshaped,list(veclist2reshapedz))
+    }
+    
+    jac2<-NULL
+    for(i in 1: length(veclist2reshaped)){
+      jac2i<-t(myl$W)%*%veclist2reshaped[[i]]
+      jac2<-c(jac2,list(as.matrix(jac2i)))
+    }
+    
+    beb<-NULL
+    for(i in 1:length(areas)){
+      bebi<-norm(jac2[[i]],type="F")^2*areas[[i]]
+      beb<-c(beb,bebi)
+    }
+    beb<-sum(beb)
+    
+  }else{beb<-"No beb"}
+  
+  
+  
+  
+  
+  out<-list(be=be,ge=ge,se=sum(sens2),area=sum(areas),ip=ip,beb=beb)
+  out
+}
+#' @export
+
 matrix2arrayasis<-function(matrix,nland){
   require(abind)
   fin<-NULL
@@ -341,27 +479,36 @@ benfrombygroup<-function(locs,array,factor,doopa=T){
 }
 #' @export
 
-plotancova<-function(y,x,group=NULL,pch=NULL,col=1,confint=T,cex=0.5,legend=T,labels=NULL,plot=T,xlab=NULL,ylab=NULL,xlim=range(x),ylim=range(y)){
-  
-  
+plotancova<-function(y,x,group=NULL,polyn=1,pch=NULL,col=1,shade=T,alpha=0.1,confint=T,cex=0.5,asp=NULL,legend=T,labels=NULL,plot=T,xlab=NULL,ylab=NULL,xlim=range(x),ylim=range(y)){
+  library(phia)
   if(is.null(group)==T){group<-factor(c(rep(1,length(y))))}else{pch=pch}
-  
-  
   if(is.null(pch)==T){pch=19}else{pch=pch}
   dati<-data.frame(group,as.numeric(group),col,pch)
   
   if(is.null(xlab)==T){xlab<-c("x")}else{xlab<-xlab}
   if(is.null(ylab)==T){ylab<-c("y")}else{ylab<-ylab}
-  if(plot==T){plot(x,y,xlim=xlim,ylim=ylim,col=col,pch=pch,cex=cex,xlab=xlab,ylab=ylab)}
-  
-  
-  
-  if(!is.null(labels)){textxy(x,y,labels)}
-  
+  if(plot==T){
+    
+    
+    par(mar=c(par('mar')[1:3], 0)) # optional, removes extraneous right inner margin space
+    plot.new()
+    l <- legend(0, 0, bty='n', xpd=NA,unique(group), pch=unique(pch), col=unique(col),plot=FALSE)
+    # calculate right margin width in ndc
+    w <- grconvertX(l$rect$w, to='ndc') - grconvertX(0, to='ndc')
+    par(omd=c(0, 1-w, 0, 1))
+    plot(x,y,xlim=xlim,ylim=ylim,col=col,pch=pch,cex=cex,xlab=xlab,ylab=ylab,asp=asp)
+    
+    if(legend==T){legend(par('usr')[2], par('usr')[4], bty='n', xpd=NA,unique(group), pch=unique(pch), col=unique(col))}
+    
+    if(!is.null(labels)){textxy(x,y,labels)}
+  }
   
   lmlist<-NULL
   for(i in 1:nlevels(group)){ 
-    lmi<-lm(y[as.numeric(group)==i]~x[as.numeric(group)==i])  
+    localy<-y[as.numeric(group)==i]
+    localx<-x[as.numeric(group)==i]
+    lmi<-lm(localy~poly(localx,degree=polyn,raw=TRUE))
+    
     lmlist<-c(lmlist,list(lmi))
   }
   names(lmlist)<-levels(group)
@@ -387,27 +534,60 @@ plotancova<-function(y,x,group=NULL,pch=NULL,col=1,confint=T,cex=0.5,legend=T,la
   names(datapredsuplist)<-levels(group)
   
   if(plot==T){
-    for(i in 1: length(lmlist)){
-      abline(lmlist[[i]],col=dati[as.numeric(group)==i,][1,3],ylim=ylim,xlim=xlim)
-    }   }                
+    if(polyn<2){
+      for(i in 1: length(lmlist)){
+        abline(lmlist[[i]],col=dati[as.numeric(group)==i,][1,3],ylim=ylim,xlim=xlim)
+      }   }else{
+        
+        for(i in 1: length(lmlist)){
+          
+          newx <- seq(min(x[as.numeric(group)==i]), max(x[as.numeric(group)==i]), length.out=500)
+          preds <- predict(lmlist[[i]],newdata = data.frame(localx=newx))
+          matord<-cbind(newx,preds)
+          matord<-matord[order(matord[,1]),]
+          lines(matord,cex=0.1,col=dati[as.numeric(group)==i,][1,3],ylim=ylim,xlim=xlim)
+        }
+        
+      }
+    
+    
+    
+  }              
   
   if(plot==T){
     if(confint==T){
       for(i in 1: length(lmlist)){
         if(anova(lmlist[[i]])$Pr[1]<0.05){
-          lines(datapredinflist[[i]],cex=0.1,lty = 'dashed',col=dati[as.numeric(group)==i,][1,3],ylim=ylim,xlim=xlim)
+          
+          matord<-datapredinflist[[i]][order(datapredinflist[[i]][,1]),]
+          
+          lines(matord,cex=0.1,lty = 'dashed',col=dati[as.numeric(group)==i,][1,3],ylim=ylim,xlim=xlim)
         }}
       
       for(i in 1: length(lmlist)){
         if(anova(lmlist[[i]])$Pr[1]<0.05){
-          lines(datapredsuplist[[i]],cex=0.1,lty = 'dashed',col=dati[as.numeric(group)==i,][1,3],ylim=ylim,xlim=xlim)
-        }}
-    }}
+          
+          
+          matord<-datapredsuplist[[i]][order(datapredsuplist[[i]][,1]),]
+          
+          lines(matord,cex=0.1,lty = 'dashed',col=dati[as.numeric(group)==i,][1,3],ylim=ylim,xlim=xlim)
+          
+          
+        }}}
+    
+    if(shade==T){
+      for(i in 1: length(lmlist)){  
+        if(anova(lmlist[[i]])$Pr[1]<0.05){
+          newx <- seq(min(x[as.numeric(group)==i]), max(x[as.numeric(group)==i]), length.out=1000)
+          preds <- predict(lmlist[[i]],newdata = data.frame(localx=newx), interval = 'confidence')
+          
+          polygon(c(rev(newx), newx), c(rev(preds[ ,3]), preds[ ,2]), col = makeTransparent(dati[as.numeric(group)==i,][1,3],alpha=alpha), border = NA)
+        }
+      }
+    }
+  }
   
-  if(legend==T){
-    x11()
-    plot(x,y,col="white")
-    legend(min(x),max(y),unique(group), cex=1, col=unique(col), pch=unique(pch),box.col="white")}
+  
   
   summarylist<-NULL
   for(i in 1:length(lmlist)){
@@ -416,47 +596,49 @@ plotancova<-function(y,x,group=NULL,pch=NULL,col=1,confint=T,cex=0.5,legend=T,la
   }
   
   names(summarylist)<-levels(group)
-  sint_results<-NULL
+  if(polyn<2){
+    sint_results<-NULL
+    for(i in 1:length(summarylist)){
+      inti<-summarylist[[i]]$coefficients[1,1]
+      p_inti<-summarylist[[i]]$coefficients[1,4]
+      betai<-summarylist[[i]]$coefficients[2,1]
+      p_betai<-summarylist[[i]]$coefficients[2,4]
+      r_sqi<-summarylist[[i]]$r.squared
+      
+      sinti<-c(inti,p_inti,betai,p_betai,r_sqi)
+      
+      sint_results<-rbind(sint_results,sinti)
+    }
+    rownames(sint_results)<-levels(group)
+    colnames(sint_results)<-c("Intercept","p-value Intercept","Beta","p-value Beta","R squared")
+    print(sint_results)}else{sint_results<-NULL}
   
-  for(i in 1:length(summarylist)){
-    inti<-summarylist[[i]]$coefficients[1,1]
-    p_inti<-summarylist[[i]]$coefficients[1,4]
-    betai<-summarylist[[i]]$coefficients[2,1]
-    p_betai<-summarylist[[i]]$coefficients[2,4]
-    r_sqi<-summarylist[[i]]$r.squared
-    
-    sinti<-c(inti,p_inti,betai,p_betai,r_sqi)
-    
-    sint_results<-rbind(sint_results,sinti)
-  }
-  rownames(sint_results)<-levels(group)
-  colnames(sint_results)<-c("Intercept","p-value Intercept","Beta","p-value Beta","R squared")
-  
-  
-  print(sint_results)
-  df<-data.frame(y=y,x=x,group=group)
-  model<-lm(y~x*group)
-  library(phia)
-  
-  slopint<-testInteractions(model, pairwise="group", slope="x") #####  TESTA SLOPE 
-  slopintmat<- matrix(NA, nlevels(spe), nlevels(spe))
-  slopintmat[lower.tri(slopintmat) ] <-round( slopint[1:(nrow(slopint)-1),5], 5)
-  slopintmat<-t(slopintmat)
-  colnames(slopintmat)<-levels(spe)
-  rownames(slopintmat)<-levels(spe)
-  slopintmat[lower.tri(slopintmat)]<-slopintmat[upper.tri(slopintmat)]
-  
-  
-  
-  elevint<-testInteractions(lm(y~x+group)) 
-  elevintmat<- matrix(NA, nlevels(group), nlevels(group))
-  elevintmat[lower.tri(elevintmat) ] <-round( elevint[1:(nrow(elevint)-1),5], 5)
-  elevintmat<-t(elevintmat)
-  colnames(elevintmat)<-levels(group)
-  rownames(elevintmat)<-levels(group)
-  elevintmat[lower.tri(elevintmat)]<-elevintmat[upper.tri(elevintmat)]
-  
-  out<-list(datapredsuplist=datapredsuplist,datapredinflist=datapredinflist,summarylist=summarylist,sint_results=sint_results,slopepval=slopintmat,elevpval=elevintmat)
+  if(polyn<2){
+    if(nlevels(group)>1){
+      df<-data.frame(y=y,x=x,group=group)
+      model<-lm(y~x*group)
+      slopint<-testInteractions(model, pairwise="group", slope="x")  
+      slopintmat<- matrix(NA, nlevels(group), nlevels(group))
+      slopintmat[lower.tri(slopintmat) ] <-round( slopint[1:(nrow(slopint)-1),5], 5)
+      slopintmat<-t(slopintmat)
+      colnames(slopintmat)<-levels(group)
+      rownames(slopintmat)<-levels(group)
+      slopintmat[lower.tri(slopintmat)]<-slopintmat[upper.tri(slopintmat)]
+      elevint<-testInteractions(lm(y~x+group)) 
+      elevintmat<- matrix(NA, nlevels(group), nlevels(group))
+      elevintmat[lower.tri(elevintmat) ] <-round( elevint[1:(nrow(elevint)-1),5], 5)
+      elevintmat<-t(elevintmat)
+      colnames(elevintmat)<-levels(group)
+      rownames(elevintmat)<-levels(group)
+      elevintmat[lower.tri(elevintmat)]<-elevintmat[upper.tri(elevintmat)]
+    }else{
+      slopintmat<-NULL
+      elevintmat<-NULL
+    }}else{
+      slopintmat<-NULL
+      elevintmat<-NULL
+    }
+  out<-list(lmlist=lmlist,datapredsuplist=datapredsuplist,datapredinflist=datapredinflist,summarylist=summarylist,sint_results=sint_results,slopepval=slopintmat,elevpval=elevintmat)
   return(out)
 }
 #' @export
