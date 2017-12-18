@@ -52,15 +52,24 @@
 #' plotdefo(amy2d,linkss=linksdors,linkst=linksdors,H=rbind(orbitR,orbitL),pholes=list(c(18,19,20,17,16,14,13,12,15),c(37,35,34,33,32,31,30,29,36)))
 #' }
 #' @export
-plotdefo<-function(procsymobject,zlim=NULL,linkss=NULL,linkst=NULL,colss=1,colst=2,lwds=2,lwdt=2,cexs=0,cext=0,displ=F,axtit=NULL,mag=1,heat=T,mfrow=c(3,2),mar=c(0,0,0.3,0),mai=c(0,0,0.3,0),oma=c(0,0,3,0),colors=c("blue4","cyan2","yellow","red4"),alpha=1,magrange=1,exts=rep(0,6),PB=NA,PA=NA,S=NA,SB=NA,H=NA,V=3,a=NULL,q=NULL,Y=FALSE,j=FALSE,D=FALSE,St=Inf,Q=TRUE,constr=T,pholes=NA){
+plotdefo<-function(procsymobject,procSym=T,zlim=NULL,linkss=NULL,linkst=NULL,colss=1,colst=2,lwds=2,lwdt=2,cexs=0,cext=0,displ=F,axtit=NULL,mags=rep(1,3),heat=T,mfrow=c(3,2),mar=c(0,0,0.3,0),mai=c(0,0,0.3,0),oma=c(0,0,3,0),colors=c("blue4","cyan2","yellow","red4"),alpha=1,magrange=1,exts=rep(0,6),PB=NA,PA=NA,S=NA,SB=NA,H=NA,V=3,a=NULL,q=NULL,Y=FALSE,j=FALSE,D=FALSE,St=Inf,Q=TRUE,constr=T,pholes=NA){
   
   mshape<-procsymobject$mshape
-  pc1pos<-showPC(max(procsymobject$PCscores[,1]),procsymobject$PCs[,1],procsymobject$mshape)
-  pc1neg<-showPC(min(procsymobject$PCscores[,1]),procsymobject$PCs[,1],procsymobject$mshape)
-  pc2pos<-showPC(max(procsymobject$PCscores[,2]),procsymobject$PCs[,2],procsymobject$mshape)
-  pc2neg<-showPC(min(procsymobject$PCscores[,2]),procsymobject$PCs[,2],procsymobject$mshape)
-  pc3pos<-showPC(max(procsymobject$PCscores[,3]),procsymobject$PCs[,3],procsymobject$mshape)
-  pc3neg<-showPC(min(procsymobject$PCscores[,3]),procsymobject$PCs[,3],procsymobject$mshape)
+  if(procSym==T){
+    pc1pos<-showPC(max(procsymobject$PCscores[,1])*mags[1],procsymobject$PCs[,1],procsymobject$mshape)
+    pc1neg<-showPC(min(procsymobject$PCscores[,1])*mags[1],procsymobject$PCs[,1],procsymobject$mshape)
+    pc2pos<-showPC(max(procsymobject$PCscores[,2])*mags[2],procsymobject$PCs[,2],procsymobject$mshape)
+    pc2neg<-showPC(min(procsymobject$PCscores[,2])*mags[2],procsymobject$PCs[,2],procsymobject$mshape)
+    pc3pos<-showPC(max(procsymobject$PCscores[,3])*mags[3],procsymobject$PCs[,3],procsymobject$mshape)
+    pc3neg<-showPC(min(procsymobject$PCscores[,3])*mags[3],procsymobject$PCs[,3],procsymobject$mshape)
+  }else{
+    pc1pos<-showPC2(max(procsymobject$PCscores[,1])*mags[1],procsymobject$PCs[,1],procsymobject$mshape)
+    pc1neg<-showPC2(min(procsymobject$PCscores[,1])*mags[1],procsymobject$PCs[,1],procsymobject$mshape)
+    pc2pos<-showPC2(max(procsymobject$PCscores[,2])*mags[2],procsymobject$PCs[,2],procsymobject$mshape)
+    pc2neg<-showPC2(min(procsymobject$PCscores[,2])*mags[2],procsymobject$PCs[,2],procsymobject$mshape)
+    pc3pos<-showPC2(max(procsymobject$PCscores[,3])*mags[3],procsymobject$PCs[,3],procsymobject$mshape)
+    pc3neg<-showPC2(min(procsymobject$PCscores[,3])*mags[3],procsymobject$PCs[,3],procsymobject$mshape)
+  }
   
   allcss<-c(cSize(pc1pos),cSize(pc1neg),cSize(pc2pos),cSize(pc2neg),cSize(pc3pos),cSize(pc3neg))
   themax<-list(pc1pos,pc1neg,pc2pos,pc2neg,pc3pos,pc3neg)[which.max(allcss)][[1]]
@@ -77,27 +86,27 @@ plotdefo<-function(procsymobject,zlim=NULL,linkss=NULL,linkst=NULL,colss=1,colst
   if(heat==F){
     ##### plot deformations associated to PC extremes; in red the Grand Mean of the gpa
     ### PC1+ 
-    tpsgridpaolo(mshape,pc1pos,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[1],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
+    tpsgridpaolo(mshape,pc1pos,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[1],mag=1,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
     title(axtit[1])
     ### PC1-
-    tpsgridpaolo(mshape,pc1neg,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[2],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
+    tpsgridpaolo(mshape,pc1neg,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[2],mag=1,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
     
     title(axtit[2])
     ### PC2+
-    tpsgridpaolo(mshape,pc2pos,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[3],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
+    tpsgridpaolo(mshape,pc2pos,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[3],mag=1,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
     title(axtit[3])
     ### PC2-
-    tpsgridpaolo(mshape,pc2neg,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[4],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
+    tpsgridpaolo(mshape,pc2neg,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[4],mag=1,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
     title(axtit[4])
     ### PC3+ 
-    tpsgridpaolo(mshape,pc3pos,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[5],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
+    tpsgridpaolo(mshape,pc3pos,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[5],mag=1,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
     title(axtit[5])
     ### PC3-
-    tpsgridpaolo(mshape,pc3neg,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[6],mag=mag,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
+    tpsgridpaolo(mshape,pc3neg,linksTT=linkss,linksYY=linkst,lwdtt=lwds,lwdyy=lwdt,axes2d=F,ext=exts[6],mag=1,collinksTT=colss,collinksYY=colst,displ=displ,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange)
     title(axtit[6])
   }else{
     
-    myh<-heat2d(mshape,pc1pos,nadd=5000,alpha=alpha,ngrid=22,mag=mag,tol=10,graphics=F,colors=colors,ext=exts[1],PB=PB,PA=PA,S=S,SB=SB,H=H,V=V,a=a,q=q,Y=Y,j=j,D=D,St=St,Q=Q,constr=constr,pholes=pholes,linkss=linkss,zlim=zlim) 
+    myh<-heat2d(mshape,pc1pos,nadd=5000,alpha=alpha,ngrid=22,mag=1,tol=10,graphics=F,colors=colors,ext=exts[1],PB=PB,PA=PA,S=S,SB=SB,H=H,V=V,a=a,q=q,Y=Y,j=j,D=D,St=St,Q=Q,constr=constr,pholes=pholes,linkss=linkss,zlim=zlim) 
     image.plot(xyz2img(cbind(myh$interpcoords,myh$pred),tolerance=myh$tol),asp=1,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange,col=myh$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="",zlim=zlim)  
     par(new=T)
     plot(myh$mate,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange,asp=1,pch=19,cex=cexs,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
@@ -133,7 +142,7 @@ plotdefo<-function(procsymobject,zlim=NULL,linkss=NULL,linkst=NULL,colss=1,colst
     }
     
     
-    myh<-heat2d(mshape,pc2pos,nadd=5000,alpha=alpha,ngrid=22,mag=mag,tol=10,graphics=F,colors=colors,ext=exts[3],PB=PB,PA=PA,S=S,SB=SB,H=H,V=V,a=a,q=q,Y=Y,j=j,D=D,St=St,Q=Q,constr=constr,pholes=pholes,linkss=linkss,zlim=zlim) 
+    myh<-heat2d(mshape,pc2pos,nadd=5000,alpha=alpha,ngrid=22,mag=1,tol=10,graphics=F,colors=colors,ext=exts[3],PB=PB,PA=PA,S=S,SB=SB,H=H,V=V,a=a,q=q,Y=Y,j=j,D=D,St=St,Q=Q,constr=constr,pholes=pholes,linkss=linkss,zlim=zlim) 
     image.plot(xyz2img(cbind(myh$interpcoords,myh$pred),tolerance=myh$tol),asp=1,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange,col=myh$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="",zlim=zlim)  
     par(new=T)
     plot(myh$mate,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange,asp=1,pch=19,cex=cexs,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
@@ -150,7 +159,7 @@ plotdefo<-function(procsymobject,zlim=NULL,linkss=NULL,linkst=NULL,colss=1,colst
         polygon(myh$pols2[[i]],col="white",border=colst)}
     }
     
-    myh<-heat2d(mshape,pc2neg,nadd=5000,alpha=alpha,ngrid=22,mag=mag,tol=10,graphics=F,colors=colors,ext=exts[4],PB=PB,PA=PA,S=S,SB=SB,H=H,V=V,a=a,q=q,Y=Y,j=j,D=D,St=St,Q=Q,constr=constr,pholes=pholes,linkss=linkss,zlim=zlim) 
+    myh<-heat2d(mshape,pc2neg,nadd=5000,alpha=alpha,ngrid=22,mag=1,tol=10,graphics=F,colors=colors,ext=exts[4],PB=PB,PA=PA,S=S,SB=SB,H=H,V=V,a=a,q=q,Y=Y,j=j,D=D,St=St,Q=Q,constr=constr,pholes=pholes,linkss=linkss,zlim=zlim) 
     image.plot(xyz2img(cbind(myh$interpcoords,myh$pred),tolerance=myh$tol),asp=1,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange,col=myh$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="",zlim=zlim)  
     par(new=T)
     plot(myh$mate,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange,asp=1,pch=19,cex=cexs,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
@@ -167,7 +176,7 @@ plotdefo<-function(procsymobject,zlim=NULL,linkss=NULL,linkst=NULL,colss=1,colst
         polygon(myh$pols2[[i]],col="white",border=colst)}
     }
     
-    myh<-heat2d(mshape,pc3pos,nadd=5000,alpha=alpha,ngrid=22,mag=mag,tol=10,graphics=F,colors=colors,ext=exts[5],PB=PB,PA=PA,S=S,SB=SB,H=H,V=V,a=a,q=q,Y=Y,j=j,D=D,St=St,Q=Q,constr=constr,pholes=pholes,linkss=linkss,zlim=zlim) 
+    myh<-heat2d(mshape,pc3pos,nadd=5000,alpha=alpha,ngrid=22,mag=1,tol=10,graphics=F,colors=colors,ext=exts[5],PB=PB,PA=PA,S=S,SB=SB,H=H,V=V,a=a,q=q,Y=Y,j=j,D=D,St=St,Q=Q,constr=constr,pholes=pholes,linkss=linkss,zlim=zlim) 
     image.plot(xyz2img(cbind(myh$interpcoords,myh$pred),tolerance=myh$tol),asp=1,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange,col=myh$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="",zlim=zlim)  
     par(new=T)
     plot(myh$mate,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange,asp=1,pch=19,cex=cexs,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
@@ -184,7 +193,7 @@ plotdefo<-function(procsymobject,zlim=NULL,linkss=NULL,linkst=NULL,colss=1,colst
         polygon(myh$pols2[[i]],col="white",border=colst)}
     }
     
-    myh<-heat2d(mshape,pc3neg,nadd=5000,alpha=alpha,ngrid=22,mag=mag,tol=10,graphics=F,colors=colors,ext=exts[6],PB=PB,PA=PA,S=S,SB=SB,H=H,V=V,a=a,q=q,Y=Y,j=j,D=D,St=St,Q=Q,constr=constr,pholes=pholes,linkss=linkss,zlim=zlim) 
+    myh<-heat2d(mshape,pc3neg,nadd=5000,alpha=alpha,ngrid=22,mag=1,tol=10,graphics=F,colors=colors,ext=exts[6],PB=PB,PA=PA,S=S,SB=SB,H=H,V=V,a=a,q=q,Y=Y,j=j,D=D,St=St,Q=Q,constr=constr,pholes=pholes,linkss=linkss,zlim=zlim) 
     image.plot(xyz2img(cbind(myh$interpcoords,myh$pred),tolerance=myh$tol),asp=1,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange,col=myh$cols,xaxs="r",yaxs="r",xaxt="n",yaxt="n",bty="n",xlab="",ylab="",zlim=zlim)  
     par(new=T)
     plot(myh$mate,xlim=range(themax[,1])*magrange,ylim=range(themax[,2])*magrange,asp=1,pch=19,cex=cexs,xaxt="n",yaxt="n",bty="n",xlab="",ylab="")
