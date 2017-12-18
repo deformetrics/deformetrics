@@ -362,6 +362,11 @@ plotptau5<-function(objptau,links=NULL,projorig=T,whichaxes=c(1,2),cexscale=roun
   m<-dim(objptau$arrayord)[2]
   n<-dim(objptau$arrayord)[3]
   transp<-read.inn(objptau$shifted,k,m)
+  
+  
+  if(m>2){
+    if(heat==T&is.null(triang)==T){stop("with heat=T in 3D I need triangulation")}
+  }
   origsize<-objptau$indepepure
   if(projorig==T){
     ordiwithshapes(objptau$space1mshape,objptau$space1$x,objptau$space1$rotation,procSym=F,whichaxes=whichaxes,addata=objptau$origproj[,whichaxes],asp=1,factraj=objptau$factorord,cex=origsize/cexscale,triang=triang,from=from,to=topcs,links=links,mag=mag,shiftnegy=1.5,shiftposy=2,col=col,pch=pch,subplotdim=subplotdim,plotsource=plotsource)
@@ -377,11 +382,19 @@ plotptau5<-function(objptau,links=NULL,projorig=T,whichaxes=c(1,2),cexscale=roun
   }
   title("Rates of shape change among consecutive predictions per unit size in original data")
   
+  if(m>2){
   if(is.null(triang)){open3d()}
   if(is.null(triang)){heat=F}
   rgl.close()
   if(is.null(triang)){triang2<-NULL}else{triang2<-t(triang)}
   mydef<-plotdefo3d(list(mshape=objptau$space1mshape,PCs=objptau$space1$rotation,PCscores=objptau$space1$x),procSym=F,triang=triang2,from=from,to=topcs,links=links,heat=heat,out=T)
+  }else{
+    mydef<-plotdefo(list(mshape=objptau$space1mshape,PCs=objptau$space1$rotation,PCscores=objptau$space1$x),procSym=F,linkss=links,linkst=links,heat=heat)
+    
+  }
+  
+
+  reset.par()
   
   plot(objptau$indepepure,ratestrasp,pch=pch,col=col)
   for(i in 1:nlevels(objptau$factorord)){
@@ -407,17 +420,19 @@ plotptau5<-function(objptau,links=NULL,projorig=T,whichaxes=c(1,2),cexscale=roun
   
   if(m<3){initdaplot<-abind::abind(initdaplot,array(rep(0,k*n),dim=c(k,1,1)),along=2)}
   
+  if(m>2){
   if(heat==T){
     adultsdaplotvis<-NULL
     alldists<-NULL
     for(i in 1:nlevels(objptau$factorord)){
       adultsdaplotvisi<-heat3d(initdaplot[,,1],adultsdaplot[,,i],t(triang),graphics=F,to=tore,from=from,scaleramp=scaleramp)
-      alldists<-c(alldists,list(adultsdaplotvisi$obs3))
+      alldists<-c(alldists,list(adultsdaplotvisi$obs))
       daagg<-objptau$space1$x[1:n,1:3][lastsfac(objptau$factorord),][i,]
       adultsdaplotvisi<-translate3d(scalemesh(adultsdaplotvisi$obm$colMesh,1/shapescale,center="none"),daagg[1],daagg[2],daagg[3])
       adultsdaplotvis<-c(adultsdaplotvis,list(adultsdaplotvisi))
     }
   }else{adultsdaplotvis<-NULL;alldists<-NULL}
+  }
   
   open3d()
   r3dDefaults$windowRect <- c(0,50, 8000, 8000) 
@@ -443,12 +458,13 @@ plotptau5<-function(objptau,links=NULL,projorig=T,whichaxes=c(1,2),cexscale=roun
     if(!is.null(links)){lineplot((initdaplot[,,1]/shapescale)+babedaagg,links)}
     if(!is.null(triang)){plotsurf((initdaplot[,,1]/shapescale)+babedaagg,triang,col=1)}
   }else{
-    
+    if(m>2){
     for(i in 1:nlevels(objptau$factorord)){
       meshDist(adultsdaplotvis[[i]],distvec=alldists[[i]],from=range(alldists)[1],to=range(alldists)[2],add=T,scaleramp=scaleramp)
     }
     babedaagg<-rep.row(objptau$space1$x[firstsfac(objptau$factorord),1:3][1,],k)
     shade3d(plotsurf((initdaplot[,,1]/shapescale)+babedaagg,triang,plot=F),add=T,alpha=0.5)
+    }
   }
   next3d()
   babedaagg<-objptau$space1$x[firstsfac(objptau$factorord),1:3][1,]
@@ -643,35 +659,27 @@ plotancova<-function(y,x,group=NULL,polyn=1,pch=NULL,col=1,shade=T,alpha=0.1,con
 }
 #' @export
 
-heat3d<-function(source,target,triang,iter=2,linkss=NULL,linkst=NULL,plotlands=F,legend=T,cols=1,colt=2,plotsource=T,plottarget=T,collinkss=1,lwds=2,collinkst=2,lwdt=2,cexs=0.5,cext=0.5,colors=c("blue4","cyan2","yellow","red4"),alpha=1,ngrid=0,mag=1,graphics=T,to=NULL,from=NULL,scaleramp=F,lines=T){
+heat3d<-function(source,target,triang,iter=0,dointerp=F,linkss=NULL,linkst=NULL,plotlands=F,legend=T,cols=1,colt=2,plotsource=T,plottarget=T,collinkss=1,lwds=2,collinkst=2,lwdt=2,cexs=0.5,cext=0.5,colors=c("blue","cyan","yellow","red"),alpha=1,ngrid=0,mag=1,graphics=T,to=NULL,from=NULL,scaleramp=F,lines=T){
   mate<-source
   mate2<-target
   mate2<-mate+(mate2-mate)*mag
   library(fields)
   mmate<-plotsurf(mate,t(triang),plot=F)
   mmate2<-plotsurf(mate2,t(triang),plot=F)
-  ar3dtri<-function(matrix){
-    a<-matrix[1,]
-    b<-matrix[2,]
-    c<-matrix[3,]
-    ab<-dist(rbind(a,b))[1]
-    bc<-dist(rbind(b,c))[1]
-    ca<-dist(rbind(c,a))[1]
-    s<-(ab+bc+ca)/2
-    ar<-sqrt((s*(s-ab)*(s-bc)*(s-ca)))
-    ar
+  
+  
+  mesh2listri<-function(mat,tri){
+    if(ncol(tri)>3){tri<-t(tri)}
+    res <- apply(tri, 1, function(x) mat[x,])
+    res <- lapply(as.data.frame(res), function(x) matrix(x, nrow = 3, ncol = ncol(tri)))
+    res
   }
   
-  ar01<-NULL
-  for(i in 1:nrow(triang)){
-    ar01i<-ar3dtri(t(mmate$vb[1:3,])[triang[i,],])
-    ar01<-c(ar01,ar01i)
-  }
-  ar02<-NULL
-  for(i in 1:nrow(triang)){
-    ar02i<-ar3dtri(t(mmate2$vb[1:3,])[triang[i,],])
-    ar02<-c(ar02,ar02i)
-  }
+  
+  
+  ar01<-vcgArea(mmate,perface=T)$pertriangle
+  ar02<-vcgArea(mmate2,perface=T)$pertriangle
+  
   
   obs0<-log(ar02/ar01)
   
@@ -687,34 +695,70 @@ heat3d<-function(source,target,triang,iter=2,linkss=NULL,linkst=NULL,plotlands=F
   M2<-vcgBary(tes2)
   
   triangtes<-t(tes$it)
-  ar1<-NULL
-  for(i in 1:nrow(triangtes)){
-    ar1i<-ar3dtri(t(tes$vb[1:3,])[triangtes[i,],])
-    ar1<-c(ar1,ar1i)
+  if(iter>0){
+    ar1<-vcgArea(tes,perface=T)$pertriangle
+    ar2<-vcgArea(tes2,perface=T)$pertriangle
   }
-  ar2<-NULL
-  for(i in 1:nrow(triangtes)){
-    ar2i<-ar3dtri(t(tes2$vb[1:3,])[triangtes[i,],])
-    ar2<-c(ar2,ar2i)
-  }
-  obsref<-log(ar2/ar1)
-  fit<- Tps(M02,obs0) 
-  obs2<-predict(fit,rbind(mate2,M2))
-  obs3<-c(obs2)
-  obs3[is.na(obs3)]<-mean(obs3,na.rm=T)
-  obm<-meshDist(plotsurf(rbind(mate2,M2),mmate$it,plot=F),distv=obs3,add=T,rampcolors =colors,to=to,from=from,scaleramp=scaleramp,plot=F,alpha=alpha)
+  
+  
+  if(iter>0){obsref<-log(ar2/ar1)}else{obsref<-obs0}
+  if(dointerp==T){fit<- fastTps(M02,obs0,theta=0.009)}else{fit<-NULL} 
+  if(dointerp==T){obs2<-predict(fit,rbind(mate2,M2))}else{obs2<-NULL}
+  if(dointerp==T){obs3<-c(obs2)}else{obs3<-NULL}
+  if(dointerp==T){obs3[is.na(obs3)]<-mean(obs3,na.rm=T)}
+  
+  
+  
+  if(dointerp==T){obm<-meshDist(plotsurf(rbind(mate2,M2),mmate$it,plot=F),distv=obs3,add=T,rampcolors =colors,to=to,from=from,scaleramp=scaleramp,plot=F,alpha=alpha)}else{obm<-NULL}
+  
+  
+  
   if(graphics==T){
     if(plotlands==T){deformGrid3d(mate,mate2,ngrid=ngrid,lines=lines,col1=cols,col2=colt)}
-    shade3d(obm$colMesh,alpha=alpha)
+    if(dointerp==T){shade3d(obm$colMesh,alpha=alpha)}
+  }
+    if(dointerp==F){
+      if(is.null(from)&is.null(to)==T){
+        colo<-plotrix::color.scale(obs0,c(0,0,1,1),c(0,0.93,1,0),c(0.78,0.93,0,0),color.spec="rgb")
+        if(graphics==T){shade3d(mmate2,col=rep(colo,each=3))}
+      }else{
+        colo1<-plotrix::color.scale(c(seq(from,to,length.out=100),obs0),c(0,0,1,1),c(0,0.93,1,0),c(0.78,0.93,0,0),color.spec="rgb")
+        colo<-colo1[-c(1:100)]
+        if(graphics==T){shade3d(mmate2,col=rep(colo,each=3),alpha=alpha)}
+      }
+    
+obm<-list(colMesh=list(vb=mmate$vb,it=mmate$it,material=list(color=as.matrix(rep(colo,each=3)))))
+      class(obm$colMesh)<-"mesh3d"
+      }
+    
+    if(is.null(from)&is.null(to)==T){
+      colo1<-plotrix::color.scale(seq(min(obs0),max(obs0),length.out=100),c(0,0,1,1),c(0,0.93,1,0),c(0.78,0.93,0,0),color.spec="rgb")
+      if(graphics==T){
+      plot(cbind(seq(min(obs0),max(obs0),length.out=100),0),col=colo1,cex=10,pch=15,xaxt="n",yaxt="n",axes=F,xlab="",ylab="")
+      axis(1)
+      }
+      }else{
+        
+        colo1<-plotrix::color.scale(c(seq(from,to,length.out=100),obs0),c(0,0,1,1),c(0,0.93,1,0),c(0.78,0.93,0,0),color.spec="rgb")
+        if(graphics==T){
+        plot(cbind(c(seq(from,to,length.out=100)),0),col=colo1[1:100],cex=10,pch=15,xaxt="n",yaxt="n",axes=F,xlab="",ylab="")
+        axis(1)
+        }
+      }
+    
+  if(graphics==T){
     if(!is.null(linkst)){lineplot(mate2,linkst,col=collinkst,lwd=lwds)}
     if(plotsource==T){
       shade3d(plotsurf(source,t(triang),plot=F),alpha=0.5)
       if(!is.null(linkss)){lineplot(mate,linkss,col=collinkss,lwd=lwdt)}}
   }
+  if(iter>0){ar1<-ar1}else{ar1<-c("no iter")}
   
-  out<-list(mate=mate,mate2=mate2,mmate=mmate,mmate2=mmate2,ar01=ar01,ar02=ar02,ar1=ar1,ar2=ar2,M0=M0,M02=M02,M=M,M2=M2,obsref=obsref,obs2=obs2,obs=obs3,obs3=obs3,fit=fit,cols=makeTransparent(colorRampPalette(colors)(n = length(obs3)),alpha=alpha),tes=tes,tes2=tes2,obm=obm)
+  if(iter>0){ar2<-ar2}else{ar2<-c("no iter")}
+  out<-list(mate=mate,mate2=mate2,mmate=mmate,mmate2=mmate2,ar01=ar01,ar02=ar02,ar1=ar1,ar2=ar2,M0=M0,M02=M02,M=M,M2=M2,obsref=obsref,obs2=obs2,obs=obs0,obs3=obs3,fit=fit,cols=makeTransparent(colorRampPalette(colors)(n = length(obs3)),alpha=alpha),tes=tes,tes2=tes2,obm=obm)
   out
 }
+
 #' @export
 
 plotsurf<-function(lmatrix,triang,col=1,alpha=0.5,plot=T){
@@ -2332,40 +2376,40 @@ tpsgridpaolo<-function (TT, YY, xbegin = -999, ybegin = -999, xlim=NULL,ylim=NUL
     for (i in 1:l) {
       s <- matrix(0, k, 1)
       for (im in 1:k) {
-        s[im, ] <- shapes::sigma(refc[i, ] - TT[im, ])
+        s[im, ] <- shapes::sigmacov(refc[i, ] - TT[im, ])
       }
       phi[i, ] <- ta + t(B) %*% refc[i, ] + t(W) %*% s
     }
     if(graphics==T){
-      if (m == 3) {
-        if (opt == 2) {
-          shapes3d(TT, color = 2, axes3 = axes3, rglopen = FALSE)
-          shapes3d(YY, color = 4, rglopen = FALSE)
-          for (i in 1:k) {
-            lines3d(rbind(TT[i, ], YY[i, ]), col = 1)
-          }
-          for (j in 1:kx) {
-            lines3d(refc[((j - 1) * ky + 1):(ky * j), ], 
-                    color = 6)
-          }
-          for (j in 1:ky) {
-            lines3d(refc[(0:(kx - 1) * ky) + j, ], color = 6)
-          }
-        }
-        shapes3d(TT, color = collandsTT, axes3 = axes3, rglopen = FALSE)
-        shapes3d(YY, color = collandsYY, rglopen = FALSE)
+    if (m == 3) {
+      if (opt == 2) {
+        shapes3d(TT, color = 2, axes3 = axes3, rglopen = FALSE)
+        shapes3d(YY, color = 4, rglopen = FALSE)
         for (i in 1:k) {
-          lines3d(rbind(TT[i, ], YY[i, ]), col = colshift)
+          lines3d(rbind(TT[i, ], YY[i, ]), col = 1)
         }
         for (j in 1:kx) {
-          lines3d(phi[((j - 1) * ky + 1):(ky * j), ], color = colgrid)
+          lines3d(refc[((j - 1) * ky + 1):(ky * j), ], 
+                  color = 6)
         }
         for (j in 1:ky) {
-          lines3d(phi[(0:(kx - 1) * ky) + j, ], color = colgrid)
+          lines3d(refc[(0:(kx - 1) * ky) + j, ], color = 6)
         }
       }
-      
+      shapes3d(TT, color = collandsTT, axes3 = axes3, rglopen = FALSE)
+      shapes3d(YY, color = collandsYY, rglopen = FALSE)
+      for (i in 1:k) {
+        lines3d(rbind(TT[i, ], YY[i, ]), col = colshift)
+      }
+      for (j in 1:kx) {
+        lines3d(phi[((j - 1) * ky + 1):(ky * j), ], color = colgrid)
+      }
+      for (j in 1:ky) {
+        lines3d(phi[(0:(kx - 1) * ky) + j, ], color = colgrid)
+      }
     }
+    
+  }
     
     
   }
