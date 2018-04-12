@@ -2,13 +2,13 @@ Package: deformetrics
 Title: 3D and 2D Shape Analysis
 Version: 0.99
 Author: Paolo Piras, Antonio Profico, Valerio Varano, Pasquale Raia, Alessio Veneziano
-Maintainer: Paolo Piras <antonio.profico@uniroma1.it>
+Maintainer: Paolo Piras <antonio.profico@uniroma1.it> 
 Description: Allows retrieving 3D quality morphological information from 2D landmark configurations. 'combin2d' method. It works by merging the morphological information obtained from the Generalized Procrustes Analysis (GPA) of 2D datasets sampled from different anatomical views.
 Depends: R (>= 3.4.0)
-Imports: Morpho (>= 2.5), stats (>= 3.4), abind (>= 1.4)
+Imports:   Morpho (>= 2.5),
+    stats (>= 3.4),
+	abind (>= 1.4)
 License: GPL-2
 Encoding: UTF-8
 LazyLoad: yes
 RoxygenNote: 6.0.1.9000
-NeedsCompilation: no
-Packaged: 2018-04-11 15:35:13 UTC; Arothron
